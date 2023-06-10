@@ -58,7 +58,7 @@ class ChatPrivate:
                 pass
             
     def open_connection_for(self, username, client):
-        if username not in self.groups:
+        if username in self.groups:
             jsonized_msg = json.dumps(
                 {
                     "tipe_pesan": "OPEN_KONEKSI_FAIL",
