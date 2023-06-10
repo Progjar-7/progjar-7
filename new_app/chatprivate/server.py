@@ -63,7 +63,7 @@ class ChatPrivate:
                 {
                     "tipe_pesan": "OPEN_KONEKSI_FAIL",
                     "data": {
-                        "alasan": "User tidak dikenali"
+                        "alasan": "User sudah ada"
                     }
                 }
             )
