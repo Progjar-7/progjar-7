@@ -82,8 +82,10 @@ def main(page: ft.Page):
     else:
       page.dialog.open = False
       all_messages.controls.clear()
+      # connect to server client
       chat_private.start_chat()
       chat_private.send_message(f"OPENPRIVATE {your_username.value}")
+      
       page.update()
       loop_show_messages()
     
@@ -97,6 +99,7 @@ def main(page: ft.Page):
       current_username = your_username.value
       
       chat_field.value = ""
+      loop_show_messages()
       page.update()
   
   # =============A dialog asking for a user display name

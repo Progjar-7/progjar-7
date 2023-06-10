@@ -14,8 +14,9 @@ class ChatPrivateClient:
     def receive_messages(self):
         try:
             while True:
-                message = self.client.recv(1024).decode('utf-8')
+                message = self.client.recv(4096).decode('utf-8')
                 if message:
+                    # print(message)
                     self.received_queue.put(message)
         except ConnectionResetError:
             print("Disconnected from the server.")
