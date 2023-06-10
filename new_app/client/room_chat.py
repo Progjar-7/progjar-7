@@ -1,4 +1,7 @@
 import flet as ft
+import base64
+from flet import icons
+
 import json
 import user
 from client import ChatPrivateClient
@@ -102,6 +105,18 @@ def main(page: ft.Page):
       loop_show_messages()
       page.update()
   
+  # ============= Bagian upload file
+  def handle_file_upload(e: ft.FilePickerResultEvent):
+    if (e.files) and len(e.files) > 0:
+       with open(e.files[0].path, "rb") as f:
+          content = base64.b64encode(f.read()).decode()
+          print(content)
+
+          # TODO: protokol upload file
+
+  file_picker = ft.FilePicker(on_result=handle_file_upload)
+  page.overlay.append(file_picker)
+
   # =============A dialog asking for a user display name
   your_username = ft.TextField(
     label="Enter your username",
@@ -149,10 +164,14 @@ def main(page: ft.Page):
       ft.IconButton(icon="send",
       icon_size=30,
       on_click=send_message_click
+      ),
+      ft.IconButton(icon=icons.UPLOAD_FILE, 
+      icon_size=30,
+      on_click=lambda _ : file_picker.pick_files(allow_multiple=False)
       )
     ])
   )
-  
+
   page_layout = ft.Column([
     ft.Container(
       height=500,
@@ -161,7 +180,7 @@ def main(page: ft.Page):
         all_messages,
       ], scroll="auto", auto_scroll=True)
     ),
-      chat_cont
+      chat_cont,
   ])          
     
   # =========Add everything to the page
