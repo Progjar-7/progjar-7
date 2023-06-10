@@ -1,5 +1,5 @@
 import flet as ft
-import time
+import json
 import user
 from client import ChatPrivateClient
 from queue import Queue
@@ -7,33 +7,20 @@ import threading
 
 User = user
 
-# list_chat = [
-#   "Halo",
-#   "Halo juga",
-#   "Apa kabar?",
-#   "Baik, kamu?",
-#   "Juga baik",
-#   "Halo",
-#   "Halo juga",
-#   "Apa kabar?",
-#   "Baik, kamu?",
-#   "Juga baik",
-#   "Halo",
-#   "Halo juga",
-#   "Apa kabar?",
-#   "Baik, kamu?",
-#   "Juga baik",
-# ]
+messages: Queue = Queue()
 
 # communication with server
 chat_private = ChatPrivateClient()
-
 def listen(queue: Queue):
     try:
         while True:
           if not queue.empty():
-              message = queue.get()
-              print(message) # main main disini
+              rcv = queue.get()
+              reformat_rcv = rcv.replace("'", '"')
+              result = json.loads(reformat_rcv)
+              messages.put(result)
+              # print(f"dari listen : {messages}") # main main disini
+              # print(f"dari listen : {messages['data']}") # main main disini
     except ConnectionResetError:
         print("Disconnected from the server.")
     except ConnectionAbortedError as e:
@@ -50,16 +37,17 @@ def main(page: ft.Page):
   
   all_messages = ft.Column(scroll="auto", auto_scroll=True)
   
-  # def loop_chat_dummy():
-  #   # print(username)
-  #   for index, message in enumerate(list_chat):
-  #     all_messages.controls.append(
-  #       User.get_user_interface(username=(your_username.value if index % 2 == 0 else your_username_destination.value), is_me=(index % 2 == 0), message=message)
-  #     )
-  #     page_layout.visible = True
-  #     page.update()
-  #     time.sleep(0.5)
-  
+  def loop_show_messages():
+    # bakal bereaksi kalo ada messages baru di queue
+    while True:
+      if not messages.empty():
+        result = messages.get()  # auto ke pop nanti di queue, jadi bakal kosong lagi
+        print(result)
+        # all_messages.controls.append(
+        #   User.get_user_interface(username=messages['data']['username_pengirim'], is_me=False,message=messages['data']['pesan'])
+        # )
+        page_layout.visible = True
+        page.update()
   
   # Show all messages
   def get_message(e):
@@ -79,10 +67,12 @@ def main(page: ft.Page):
     else:
       page.dialog.open = False
       all_messages.controls.clear()
+      # connect to server client
       chat_private.start_chat()
       chat_private.send_message(f"OPENPRIVATE {your_username.value}")
+      
       page.update()
-      # loop_chat_dummy()
+      # loop_show_messages()
     
   # ========menambah list chat
   def send_message_click(e):
@@ -92,6 +82,7 @@ def main(page: ft.Page):
           User.get_user_interface(username=your_username.value, is_me=True, message=chat_field.value)
       )
       chat_field.value = ""
+      loop_show_messages()
       page.update()
   
   # =============A dialog asking for a user display name

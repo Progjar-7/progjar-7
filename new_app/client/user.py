@@ -1,6 +1,24 @@
 import flet as ft
 
-def get_user_interface(username, is_me=True, message=""):
+list_chat = [
+  "Halo",
+  "Halo juga",
+  "Apa kabar?",
+  "Baik, kamu?",
+  "Juga baik",
+  "Halo",
+  "Halo juga",
+  "Apa kabar?",
+  "Baik, kamu?",
+  "Juga baik",
+  "Halo",
+  "Halo juga",
+  "Apa kabar?",
+  "Baik, kamu?",
+  "Juga baik",
+]
+
+def get_user_interface(username, is_me=False, message=""):
   return ft.Row([
     ft.Container(
       padding=20,
