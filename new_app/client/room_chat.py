@@ -1,6 +1,9 @@
 import flet as ft
 import time
 import user
+from ..chatprivate.client import ChatPrivateClient
+from queue import Queue
+import threading
 
 User = user
 
@@ -22,6 +25,20 @@ list_chat = [
   "Juga baik",
 ]
 
+# chat_private = ChatPrivateClient()
+
+# def listen(queue: Queue):
+#     try:
+#         while True:
+#           if not queue.empty():
+#               message = queue.get()
+#               print(message) # main main disini
+#     except ConnectionResetError:
+#         print("Disconnected from the server.")
+#     except ConnectionAbortedError as e:
+#         print("Exit from group")
+#     except Exception as e:
+#         print(f"An error occurred in received_message: {e}")
 
 def main(page: ft.Page):
   page.theme_mode = "light"
@@ -31,7 +48,8 @@ def main(page: ft.Page):
   
   all_messages = ft.Column(scroll="auto", auto_scroll=True)
   
-  def loop_chat_dummy():
+  def loop_chat_dummy(username):
+    print(username)
     for index, message in enumerate(list_chat):
       all_messages.controls.append(
         User.get_user_interface(username=(your_username.value if index % 2 == 0 else "Anyone"), is_me=(index % 2 == 0), message=message)
@@ -55,10 +73,15 @@ def main(page: ft.Page):
     else:
       page.dialog.open = False
       all_messages.controls.clear()
-      loop_chat_dummy()
+
+      # chat_private.start_chat()
+      # chat_private.send_message(f"OPENPRIVATE {your_username.value}")
+      loop_chat_dummy(your_username.value)
     
   # ========menambah list chat
   def send_message_click(e):
+    # chat_private.send_message(f"SENDPRIVATE {username_kita} {username_tujuan} {pesannya apa}")
+
     if chat_field.value:
       all_messages.controls.append(
           User.get_user_interface(username=your_username.value, is_me=True, message=chat_field.value)
@@ -124,5 +147,8 @@ def main(page: ft.Page):
     
   # =========Add everything to the page
   page.add(page_layout)
+
+# receiver_thread = threading.Thread(target=listen, args=(chat_private.received_queue,))
+# receiver_thread.start()
 
 ft.app(target=main)

@@ -4,10 +4,11 @@ import time
 from queue import Queue
 
 class ChatPrivateClient:
-    def __init__(self, server_address):
+    def __init__(self):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.client.connect(server_address)
+        self.client.connect(('127.0.0.1', 59000))
         self.message_queue = Queue()
+        self.received_queue = Queue()
         self.locker = threading.Lock()
 
     def receive_messages(self):
@@ -15,7 +16,7 @@ class ChatPrivateClient:
             while True:
                 message = self.client.recv(1024).decode('utf-8')
                 if message:
-                    print(message)
+                    self.received_queue.put(message)
         except ConnectionResetError:
             print("Disconnected from the server.")
         except ConnectionAbortedError as e:
@@ -61,9 +62,7 @@ class ChatPrivateClient:
         send_thread.start()
 
 if __name__ == "__main__":
-    server_address = ('127.0.0.1', 59000)
-
-    client = ChatPrivateClient(server_address)
+    client = ChatPrivateClient()
     client.start_chat()
 
     while True:
