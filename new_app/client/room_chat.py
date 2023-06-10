@@ -1,45 +1,47 @@
 import flet as ft
 import time
 import user
-from ..chatprivate.client import ChatPrivateClient
+from client import ChatPrivateClient
 from queue import Queue
 import threading
 
 User = user
 
-list_chat = [
-  "Halo",
-  "Halo juga",
-  "Apa kabar?",
-  "Baik, kamu?",
-  "Juga baik",
-  "Halo",
-  "Halo juga",
-  "Apa kabar?",
-  "Baik, kamu?",
-  "Juga baik",
-  "Halo",
-  "Halo juga",
-  "Apa kabar?",
-  "Baik, kamu?",
-  "Juga baik",
-]
+# list_chat = [
+#   "Halo",
+#   "Halo juga",
+#   "Apa kabar?",
+#   "Baik, kamu?",
+#   "Juga baik",
+#   "Halo",
+#   "Halo juga",
+#   "Apa kabar?",
+#   "Baik, kamu?",
+#   "Juga baik",
+#   "Halo",
+#   "Halo juga",
+#   "Apa kabar?",
+#   "Baik, kamu?",
+#   "Juga baik",
+# ]
 
-# chat_private = ChatPrivateClient()
+# communication with server
+chat_private = ChatPrivateClient()
 
-# def listen(queue: Queue):
-#     try:
-#         while True:
-#           if not queue.empty():
-#               message = queue.get()
-#               print(message) # main main disini
-#     except ConnectionResetError:
-#         print("Disconnected from the server.")
-#     except ConnectionAbortedError as e:
-#         print("Exit from group")
-#     except Exception as e:
-#         print(f"An error occurred in received_message: {e}")
+def listen(queue: Queue):
+    try:
+        while True:
+          if not queue.empty():
+              message = queue.get()
+              print(message) # main main disini
+    except ConnectionResetError:
+        print("Disconnected from the server.")
+    except ConnectionAbortedError as e:
+        print("Exit from group")
+    except Exception as e:
+        print(f"An error occurred in received_message: {e}")
 
+# main page
 def main(page: ft.Page):
   page.theme_mode = "light"
   page.horizontal_alignment = "stretch"
@@ -48,20 +50,24 @@ def main(page: ft.Page):
   
   all_messages = ft.Column(scroll="auto", auto_scroll=True)
   
-  def loop_chat_dummy(username):
-    print(username)
-    for index, message in enumerate(list_chat):
-      all_messages.controls.append(
-        User.get_user_interface(username=(your_username.value if index % 2 == 0 else "Anyone"), is_me=(index % 2 == 0), message=message)
-      )
-      page_layout.visible = True
-      page.update()
-      time.sleep(0.5)
+  # def loop_chat_dummy():
+  #   # print(username)
+  #   for index, message in enumerate(list_chat):
+  #     all_messages.controls.append(
+  #       User.get_user_interface(username=(your_username.value if index % 2 == 0 else your_username_destination.value), is_me=(index % 2 == 0), message=message)
+  #     )
+  #     page_layout.visible = True
+  #     page.update()
+  #     time.sleep(0.5)
+  
   
   # Show all messages
   def get_message(e):
     if not your_username.value:
       your_username.error_text = "Please enter your name"
+      page.update()
+    elif not your_username_destination.value:
+      your_username_destination.error_text = "Please enter your partner"
       page.update()
     elif not your_password.value:
       your_password.error_text = "Please enter your password"
@@ -69,20 +75,19 @@ def main(page: ft.Page):
     # elif your_username.value != "messi" or your_password.value != "surabaya":
     #   your_username.error_text = "Your account is not registered"
     #   your_password.error_text = "Your account is not registered"
-      page.update()
+      # page.update()
     else:
       page.dialog.open = False
       all_messages.controls.clear()
-
-      # chat_private.start_chat()
-      # chat_private.send_message(f"OPENPRIVATE {your_username.value}")
-      loop_chat_dummy(your_username.value)
+      chat_private.start_chat()
+      chat_private.send_message(f"OPENPRIVATE {your_username.value}")
+      page.update()
+      # loop_chat_dummy()
     
   # ========menambah list chat
   def send_message_click(e):
-    # chat_private.send_message(f"SENDPRIVATE {username_kita} {username_tujuan} {pesannya apa}")
-
     if chat_field.value:
+      chat_private.send_message(f"SENDPRIVATE {your_username.value} {your_username_destination.value} {chat_field.value}")
       all_messages.controls.append(
           User.get_user_interface(username=your_username.value, is_me=True, message=chat_field.value)
       )
@@ -92,6 +97,12 @@ def main(page: ft.Page):
   # =============A dialog asking for a user display name
   your_username = ft.TextField(
     label="Enter your username",
+    autofocus=True,
+    on_submit=get_message,
+  )
+  
+  your_username_destination = ft.TextField(
+    label="Enter your partner username",
     autofocus=True,
     on_submit=get_message,
   )
@@ -106,10 +117,10 @@ def main(page: ft.Page):
     open=True,
     modal=True,
     title=ft.Text("Welcome!"),
-    content=ft.Column([your_username, your_password],tight=True),
+    content=ft.Column([your_username, your_username_destination, your_password],tight=True),
     actions=[ft.ElevatedButton(text="Join chat", on_click=get_message)],
     actions_alignment="end",
-    )# A dialog asking for a user display name
+    )
 
   # ================Chat messages field
   chat_field = ft.TextField(
@@ -148,7 +159,8 @@ def main(page: ft.Page):
   # =========Add everything to the page
   page.add(page_layout)
 
-# receiver_thread = threading.Thread(target=listen, args=(chat_private.received_queue,))
-# receiver_thread.start()
+# Thread
+receiver_thread = threading.Thread(target=listen, args=(chat_private.received_queue,))
+receiver_thread.start()
 
 ft.app(target=main)
