@@ -1,5 +1,5 @@
 import flet as ft
-import time
+import json
 import user
 from client import ChatPrivateClient
 from queue import Queue
@@ -7,33 +7,23 @@ import threading
 
 User = user
 
-# list_chat = [
-#   "Halo",
-#   "Halo juga",
-#   "Apa kabar?",
-#   "Baik, kamu?",
-#   "Juga baik",
-#   "Halo",
-#   "Halo juga",
-#   "Apa kabar?",
-#   "Baik, kamu?",
-#   "Juga baik",
-#   "Halo",
-#   "Halo juga",
-#   "Apa kabar?",
-#   "Baik, kamu?",
-#   "Juga baik",
-# ]
-
 # communication with server
 chat_private = ChatPrivateClient()
+
+messages = Queue()
+
+current_username = ""
 
 def listen(queue: Queue):
     try:
         while True:
           if not queue.empty():
-              message = queue.get()
-              print(message) # main main disini
+              rcv = queue.get()
+              reformat_rcv = rcv.replace("'", '"')
+              result = json.loads(reformat_rcv)
+
+              messages.put(result)
+
     except ConnectionResetError:
         print("Disconnected from the server.")
     except ConnectionAbortedError as e:
@@ -50,15 +40,28 @@ def main(page: ft.Page):
   
   all_messages = ft.Column(scroll="auto", auto_scroll=True)
   
-  # def loop_chat_dummy():
-  #   # print(username)
-  #   for index, message in enumerate(list_chat):
-  #     all_messages.controls.append(
-  #       User.get_user_interface(username=(your_username.value if index % 2 == 0 else your_username_destination.value), is_me=(index % 2 == 0), message=message)
-  #     )
-  #     page_layout.visible = True
-  #     page.update()
-  #     time.sleep(0.5)
+  def loop_show_messages():
+      while True:
+          if not messages.empty():
+              result = messages.get()
+              print("dari loop show: ", result)
+
+              match result['tipe_pesan']:
+                 case 'PESAN_PRIVATE':
+                    pengirim = result['data']['username_pengirim']
+
+                    if pengirim == current_username:
+                      all_messages.controls.append(
+                        User.get_user_interface(username=pengirim, is_me=True, message=result['data']['pesan'])
+                      )
+
+                    else:
+                       all_messages.controls.append(
+                        User.get_user_interface(username=pengirim, is_me=False, message=result['data']['pesan'])
+                      )
+
+                    page_layout.visible = True
+                    page.update()
   
   
   # Show all messages
@@ -82,15 +85,17 @@ def main(page: ft.Page):
       chat_private.start_chat()
       chat_private.send_message(f"OPENPRIVATE {your_username.value}")
       page.update()
-      # loop_chat_dummy()
+      loop_show_messages()
     
   # ========menambah list chat
   def send_message_click(e):
     if chat_field.value:
       chat_private.send_message(f"SENDPRIVATE {your_username.value} {your_username_destination.value} {chat_field.value}")
-      all_messages.controls.append(
-          User.get_user_interface(username=your_username.value, is_me=True, message=chat_field.value)
-      )
+      
+      # global berarti mengakses variable current_username yang didefine di luar fungsi
+      global current_username
+      current_username = your_username.value
+      
       chat_field.value = ""
       page.update()
   
