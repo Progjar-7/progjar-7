@@ -7,15 +7,26 @@ list_chat = [
   "Apa kabar?",
   "Baik, kamu?",
   "Juga baik",
+  "Halo",
+  "Halo juga",
+  "Apa kabar?",
+  "Baik, kamu?",
+  "Juga baik",
+  "Halo",
+  "Halo juga",
+  "Apa kabar?",
+  "Baik, kamu?",
+  "Juga baik",
 ]
 
 
 def main(page: ft.Page):
+  page.theme_mode = "light"
   page.horizontal_alignment = "stretch"
   page.title = "Chat"
   page.scroll="auto"
   
-  all_messages = ft.Column(scroll="auto")
+  all_messages = ft.Column(scroll="auto", auto_scroll=True)
   
   def loop_chat_dummy():
     for index, message in enumerate(list_chat):
@@ -114,7 +125,7 @@ def main(page: ft.Page):
       padding=20,
       content=ft.Column([
         all_messages,
-      ], scroll="auto")
+      ], scroll="auto", auto_scroll=True)
     ),
       chat_cont
   ])          
