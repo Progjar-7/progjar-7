@@ -32,9 +32,12 @@ class ChatPrivate:
             return
         
         msg_to_send = {
-            "username_pengirim" : username_from,
-            "username_penerima": username_to,
-            "pesan": message,
+            "tipe_pesan": "PESAN_PRIVATE",
+            "data": {
+                "username_pengirim" : username_from,
+                "username_penerima": username_to,
+                "pesan": message,
+            },
         }
 
         jsonized_msg = json.dumps(msg_to_send)
@@ -55,12 +58,30 @@ class ChatPrivate:
                 pass
             
     def open_connection_for(self, username, client):
-        if username in self.groups:
-            return "Username sudah ada"
+        if username not in self.groups:
+            jsonized_msg = json.dumps(
+                {
+                    "tipe_pesan": "OPEN_KONEKSI_FAIL",
+                    "data": {
+                        "alasan": "User tidak dikenali"
+                    }
+                }
+            )
+
+            return bytes(jsonized_msg, encoding="utf-8")
 
         self.groups[username] = client
 
-        return f"Koneksi dibuka untuk user {username}"
+        jsonized_msg = json.dumps(
+            {
+                "tipe_pesan": "OPEN_KONEKSI_SUCCESS",
+                "data": {
+                    "pesan": f"Koneksi dibuka untuk user {username}"
+                }
+            }
+        )
+
+        return bytes(jsonized_msg, encoding="utf-8")
     
     def process_private_client(self, client):
         while True:
@@ -73,7 +94,7 @@ class ChatPrivate:
                     if order == "OPENPRIVATE":
                         username = data[1].strip()
                         result = self.open_connection_for(username, client)
-                        client.send(result.encode())
+                        client.send(result)
 
                     elif order == "SENDPRIVATE":
                         username_from = data[1].strip()
