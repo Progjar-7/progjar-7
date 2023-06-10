@@ -1,0 +1,11 @@
+{
+    "data": [
+        {
+            "sender": "alex",
+            "receiver": "abc",
+            "receiver_type": "realm",
+            "message": "hello",
+            "created_at": "2023-06-10 21:00:00"
+        }
+    ]
+}
