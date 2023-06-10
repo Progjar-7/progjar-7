@@ -1,6 +1,7 @@
 import threading
 import socket
 from queue import Queue
+import json
 
 class ChatPrivate:
     def __init__(self, host, port):
@@ -30,16 +31,25 @@ class ChatPrivate:
         if username_from not in self.groups or username_to not in self.groups:
             return
         
+        msg_to_send = {
+            "username_pengirim" : username_from,
+            "username_penerima": username_to,
+            "pesan": message,
+        }
+
+        jsonized_msg = json.dumps(msg_to_send)
+        print(msg_to_send)
+        
         with self.locker:
             try:
                 client_from = self.groups[username_from]
-                client_from.sendall(f"{username_from}: {message}".encode())
+                client_from.sendall(bytes(jsonized_msg, encoding="utf-8"))
             except ConnectionResetError:
                 pass
 
             try:
                 client_to = self.groups[username_to]
-                client_to.sendall(f"{username_from}: {message}".encode())
+                client_to.sendall(bytes(jsonized_msg, encoding="utf-8"))
 
             except ConnectionResetError:
                 pass
