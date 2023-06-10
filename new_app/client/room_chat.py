@@ -1,5 +1,8 @@
 import flet as ft
 import time
+import user
+
+User = user
 
 list_chat = [
   "Halo",
@@ -30,25 +33,12 @@ def main(page: ft.Page):
   
   def loop_chat_dummy():
     for index, message in enumerate(list_chat):
-        all_messages.controls.append(
-          # create user chat
-            ft.Row([
-                ft.Container(
-                    padding=20,
-                    border_radius=20,
-                    bgcolor="blue200" if index % 2 == 0 else "green200",
-                    content=ft.Column([
-                        ft.Text(your_username.value, size=18, weight="bold") if index % 2 == 0 else ft.Text(
-                            "Anyone", size=18, weight="bold"),
-                        ft.Text(message, size=22)
-                    ])
-                )
-            ], alignment="end" if index % 2 == 0 else "start")
-        )
-
-        page_layout.visible = True
-        page.update()
-        time.sleep(0.5)
+      all_messages.controls.append(
+        User.get_user_interface(username=(your_username.value if index % 2 == 0 else "Anyone"), is_me=(index % 2 == 0), message=message)
+      )
+      page_layout.visible = True
+      page.update()
+      time.sleep(0.5)
   
   # Show all messages
   def get_message(e):
@@ -58,9 +48,9 @@ def main(page: ft.Page):
     elif not your_password.value:
       your_password.error_text = "Please enter your password"
       page.update()
-    elif your_username.value != "messi" or your_password.value != "surabaya":
-      your_username.error_text = "Your account is not registered"
-      your_password.error_text = "Your account is not registered"
+    # elif your_username.value != "messi" or your_password.value != "surabaya":
+    #   your_username.error_text = "Your account is not registered"
+    #   your_password.error_text = "Your account is not registered"
       page.update()
     else:
       page.dialog.open = False
@@ -70,7 +60,9 @@ def main(page: ft.Page):
   # ========menambah list chat
   def send_message_click(e):
     if chat_field.value:
-      all_messages.controls.append(ft.Text(chat_field.value))
+      all_messages.controls.append(
+          User.get_user_interface(username=your_username.value, is_me=True, message=chat_field.value)
+      )
       chat_field.value = ""
       page.update()
   
