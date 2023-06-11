@@ -3,6 +3,7 @@ import socket
 from io import StringIO
 from queue import Queue
 
+
 class GatewayClient:
     def __init__(self, host: str, port: int):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -22,23 +23,23 @@ class GatewayClient:
 
                 if len(data) < num_bytes:
                     break
-                    
+
                 if d.endswith("\r\n\r\n"):
                     break
             else:
                 break
-        
+
         result = buffer.getvalue()
         stripped_result = result.strip("\r\n\r\n")
 
         return stripped_result
 
-    def receive_messages(self):        
+    def receive_messages(self):
         try:
             while True:
                 message = self.recvall(4096)
                 if message:
-                    print(message) # yang ini
+                    print(message)  # yang ini
                     self.received_queue.put(message)
         except ConnectionResetError:
             print("Disconnected from the server.")
@@ -64,10 +65,10 @@ class GatewayClient:
                         message = self.message_queue.get()
 
                         if "EXIT" in message:
-                            self.client.sendall(message.encode('utf-8'))
+                            self.client.sendall(message.encode("utf-8"))
                             break
                         else:
-                            self.client.sendall(message.encode('utf-8'))
+                            self.client.sendall(message.encode("utf-8"))
         except ConnectionResetError:
             print("Disconnected from the server.")
         except ConnectionAbortedError as e:
@@ -84,11 +85,11 @@ class GatewayClient:
         send_thread = threading.Thread(target=self.process_messages)
         send_thread.start()
 
+
 if __name__ == "__main__":
-    client = GatewayClient(host='127.0.0.1', port=11111)
+    client = GatewayClient(host="127.0.0.1", port=11111)
     client.start_chat()
 
     while True:
         msg = input()
         client.send_message(msg)
-

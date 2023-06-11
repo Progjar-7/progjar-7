@@ -3,10 +3,11 @@ import socket
 from io import StringIO
 from queue import Queue
 
+
 class ChatPrivateClient:
     def __init__(self):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.client.connect(('127.0.0.1', 59000))
+        self.client.connect(("127.0.0.1", 59000))
         self.message_queue = Queue()
         self.received_queue = Queue()
         self.locker = threading.Lock()
@@ -22,23 +23,23 @@ class ChatPrivateClient:
 
                 if len(data) < num_bytes:
                     break
-                    
+
                 if d.endswith("\r\n\r\n"):
                     break
             else:
                 break
-        
+
         result = buffer.getvalue()
         stripped_result = result.strip("\r\n\r\n")
 
         return stripped_result
 
-    def receive_messages(self):        
+    def receive_messages(self):
         try:
             while True:
                 message = self.recvall(4096)
                 if message:
-                    print(message) # yang ini
+                    print(message)  # yang ini
                     self.received_queue.put(message)
         except ConnectionResetError:
             print("Disconnected from the server.")
@@ -64,10 +65,10 @@ class ChatPrivateClient:
                         message = self.message_queue.get()
 
                         if "EXIT" in message:
-                            self.client.sendall(message.encode('utf-8'))
+                            self.client.sendall(message.encode("utf-8"))
                             break
                         else:
-                            self.client.sendall(message.encode('utf-8'))
+                            self.client.sendall(message.encode("utf-8"))
         except ConnectionResetError:
             print("Disconnected from the server.")
         except ConnectionAbortedError as e:
@@ -84,6 +85,7 @@ class ChatPrivateClient:
         send_thread = threading.Thread(target=self.process_messages)
         send_thread.start()
 
+
 if __name__ == "__main__":
     client = ChatPrivateClient()
     client.start_chat()
@@ -91,4 +93,3 @@ if __name__ == "__main__":
     while True:
         msg = input()
         client.send_message(msg)
-

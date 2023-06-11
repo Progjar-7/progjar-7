@@ -4,8 +4,9 @@ from queue import Queue
 from io import StringIO
 import json
 
+
 class ChatPrivate(threading.Thread):
-    def __init__(self, addr: tuple = ('127.0.0.1', 0)):
+    def __init__(self, addr: tuple = ("127.0.0.1", 0)):
         self.clt = []
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -18,7 +19,7 @@ class ChatPrivate(threading.Thread):
     def broadcast_all(self, message, room_name):
         if room_name not in self.groups:
             return
-        
+
         with self.locker:
             for client in self.groups[room_name]["clients"]:
                 try:
@@ -52,11 +53,11 @@ class ChatPrivate(threading.Thread):
     def send_to(self, username_from, username_to, message):
         if username_from not in self.groups or username_to not in self.groups:
             return
-        
+
         msg_to_send = {
             "tipe_pesan": "PESAN_PRIVATE",
             "data": {
-                "username_pengirim" : username_from,
+                "username_pengirim": username_from,
                 "username_penerima": username_to,
                 "pesan": message,
             },
@@ -64,7 +65,7 @@ class ChatPrivate(threading.Thread):
 
         jsonized_msg = json.dumps(msg_to_send)
         print(msg_to_send)
-        
+
         with self.locker:
             try:
                 client_from = self.groups[username_from]
@@ -102,11 +103,11 @@ class ChatPrivate(threading.Thread):
     def send_file_to(self, username_from, username_to, filename, file_content):
         if username_from not in self.groups or username_to not in self.groups:
             return
-        
+
         msg_to_send = {
             "tipe_pesan": "PESAN_FILE_PRIVATE",
             "data": {
-                "username_pengirim" : username_from,
+                "username_pengirim": username_from,
                 "username_penerima": username_to,
                 "filename": filename,
                 "file_content": file_content,
@@ -115,7 +116,7 @@ class ChatPrivate(threading.Thread):
 
         jsonized_msg = json.dumps(msg_to_send)
         print(msg_to_send)
-        
+
         with self.locker:
             try:
                 client_from = self.groups[username_from]
@@ -128,7 +129,7 @@ class ChatPrivate(threading.Thread):
                 client_to.sendall(bytes(f"{jsonized_msg}\r\n\r\n", encoding="utf-8"))
             except ConnectionResetError:
                 pass
-            
+
     def open_connection_for(self, username, client):
         # if username in self.groups:
             # jsonized_msg = json.dumps(
@@ -146,14 +147,12 @@ class ChatPrivate(threading.Thread):
         jsonized_msg = json.dumps(
             {
                 "tipe_pesan": "OPEN_KONEKSI_SUCCESS",
-                "data": {
-                    "pesan": f"Koneksi dibuka untuk user {username}"
-                }
+                "data": {"pesan": f"Koneksi dibuka untuk user {username}"},
             }
         )
 
         return bytes(f"{jsonized_msg}\r\n\r\n", encoding="utf-8")
-    
+
     def process_private_client(self, client):
         def recvall(num_bytes, connection) -> str:
             buffer = StringIO()
@@ -167,12 +166,12 @@ class ChatPrivate(threading.Thread):
 
                     if len(data) < num_bytes:
                         break
-                        
+
                     if d.endswith("\r\n\r\n"):
                         break
                 else:
                     break
-            
+
             result = buffer.getvalue()
             stripped_result = result.strip("\r\n\r\n")
 
@@ -211,7 +210,9 @@ class ChatPrivate(threading.Thread):
 
                         content_file_string = content_file.getvalue()
 
-                        self.send_file_to(username_from, username_to, filename, content_file_string)
+                        self.send_file_to(
+                            username_from, username_to, filename, content_file_string
+                        )
 
                     elif order == "SENDFILESINGLE":
                         username_dest = data[1].strip()
@@ -238,16 +239,19 @@ class ChatPrivate(threading.Thread):
                 break
 
     def run(self):
-        print('Server Private is running and listening ...')
+        print("Server Private is running and listening ...")
         while True:
             client, address = self.server.accept()
-            print(f'Connection established with {str(address)}')
-            
-            client_thread = threading.Thread(target=self.process_private_client, args=(client,))
+            print(f"Connection established with {str(address)}")
+
+            client_thread = threading.Thread(
+                target=self.process_private_client, args=(client,)
+            )
             client_thread.start()
 
+
 if __name__ == "__main__":
-    server = ChatPrivate('127.0.0.1', 59000)
+    server = ChatPrivate("127.0.0.1", 59000)
     server.start()
 
     print("Ready...")

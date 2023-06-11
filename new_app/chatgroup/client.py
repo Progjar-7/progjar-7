@@ -7,7 +7,7 @@ from queue import Queue
 class ChatClient:
     def __init__(self):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.client.connect(('127.0.0.1', 59000))
+        self.client.connect(("127.0.0.1", 59000))
         self.message_queue = Queue()
         self.received_queue = Queue()
         self.locker = threading.Lock()
@@ -23,12 +23,12 @@ class ChatClient:
 
                 if len(data) < num_bytes:
                     break
-                    
+
                 if d.endswith("\r\n\r\n"):
                     break
             else:
                 break
-        
+
         result = buffer.getvalue()
         stripped_result = result.strip("\r\n\r\n")
 
@@ -65,10 +65,10 @@ class ChatClient:
                         message = self.message_queue.get()
 
                         if "EXIT" in message:
-                            self.client.sendall(message.encode('utf-8'))
+                            self.client.sendall(message.encode("utf-8"))
                             break
                         else:
-                            self.client.sendall(message.encode('utf-8'))
+                            self.client.sendall(message.encode("utf-8"))
         except Exception as e:
             print(f"An error occurred in process_messages: {e}")
         finally:
@@ -81,8 +81,9 @@ class ChatClient:
         send_thread = threading.Thread(target=self.process_messages)
         send_thread.start()
 
+
 if __name__ == "__main__":
-    client = ChatClient() # alias + roomname gausah diliat dulu
+    client = ChatClient()  # alias + roomname gausah diliat dulu
     client.start_chat()
 
     while True:

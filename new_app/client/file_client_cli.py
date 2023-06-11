@@ -3,7 +3,7 @@ import json
 import base64
 import logging
 
-server_address = ('localhost', 6666)
+server_address = ("localhost", 6666)
 
 
 def send_command(command_str=""):
@@ -40,9 +40,9 @@ def send_command(command_str=""):
 def remote_list():
     command_str = f"LIST"
     hasil = send_command(command_str)
-    if (hasil['status'] == 'OK'):
+    if hasil["status"] == "OK":
         print("daftar file : ")
-        for nmfile in hasil['data']:
+        for nmfile in hasil["data"]:
             print(f"- {nmfile}")
         return True
     else:
@@ -53,11 +53,11 @@ def remote_list():
 def remote_get(filename=""):
     command_str = f"GET {filename}"
     hasil = send_command(command_str)
-    if (hasil['status'] == 'OK'):
+    if hasil["status"] == "OK":
         # proses file dalam bentuk base64 ke bentuk bytes
-        namafile = hasil['data_namafile']
-        isifile = base64.b64decode(hasil['data_file'])
-        fp = open(namafile, 'wb+')
+        namafile = hasil["data_namafile"]
+        isifile = base64.b64decode(hasil["data_file"])
+        fp = open(namafile, "wb+")
         fp.write(isifile)
         fp.close()
         return True
@@ -72,7 +72,7 @@ def upload(filename: str = "") -> bool:
 
     command_str = f"UPLOAD {filename} {content_file}"
     hasil = send_command(command_str)
-    if (hasil['status'] == 'OK'):
+    if hasil["status"] == "OK":
         print(hasil)
         return True
     else:
@@ -80,10 +80,10 @@ def upload(filename: str = "") -> bool:
         return False
 
 
-def delete(filename: str ="") -> bool:
+def delete(filename: str = "") -> bool:
     command_str = f"HAPUS {filename}"
     hasil = send_command(command_str)
-    if (hasil['status'] == 'OK'):
+    if hasil["status"] == "OK":
         print(hasil)
         return True
     else:
@@ -91,8 +91,8 @@ def delete(filename: str ="") -> bool:
         return False
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # remote_list()
     # remote_get('donalbebek.jpg')
-    upload('donalbebek.jpg')
+    upload("donalbebek.jpg")
     # delete("testfile.txt")

@@ -4,26 +4,31 @@ from pathlib import Path
 from operator import itemgetter
 from typing import Optional, Dict
 
-def get_user(username: str) -> Optional[Dict[str, str]]:    
-    with open('user.json', 'r') as f:
+
+def get_user(username: str) -> Optional[Dict[str, str]]:
+    with open("user.json", "r") as f:
         data = json.load(f)
-        for item in data['data']:
-            if item['username'] == username:
+        for item in data["data"]:
+            if item["username"] == username:
                 return {
-                    "username": item['username'],
-                    "password": item['password'],
-                    "realm_name": item['realm_name'],
+                    "username": item["username"],
+                    "password": item["password"],
+                    "realm_name": item["realm_name"],
                 }
     f.close()
 
     return None
+
+
 # add new user to database
 def add_user(username: str, password: str) -> None:
-    Database('user.json').insert_data({
-        "username": username,
-        "realm_name": "default",
-        "password": password,
-    })
+    Database("user.json").insert_data(
+        {
+            "username": username,
+            "realm_name": "default",
+            "password": password,
+        }
+    )
 
 
 class Database:
@@ -36,7 +41,7 @@ class Database:
     # read_db reads data from file
     def read_db(self):
         try:
-            f = open(self.file_name, 'r')
+            f = open(self.file_name, "r")
             file_data = json.load(f)
             f.close()
             return file_data["data"]
@@ -47,9 +52,9 @@ class Database:
     # write_db writes data in the file
     def write_db(self):
         try:
-            f = open(self.file_name, 'w')
+            f = open(self.file_name, "w")
             f.truncate(0)
-            f.write(json.dumps({'data': self.data}, indent=4))
+            f.write(json.dumps({"data": self.data}, indent=4))
             f.close()
         except Exception as e:
             print("Tidak dapat menulis file ", e)
@@ -61,7 +66,7 @@ class Database:
 
     # is_exists checks if a data exists matching by the key and value
     def is_exists(self, key, value):
-        return (value in [data[key] for data in self.data])
+        return value in [data[key] for data in self.data]
 
     # get_by_key_value returns a data by the matching key and value
     def get_by_key_value(self, key, value):
@@ -79,7 +84,7 @@ class Database:
 
 
 if __name__ == "__main__":
-    db = Database('user.json')
+    db = Database("user.json")
     print(db.get_all())
     db.insert_data({"username": "aaa", "password": "123"})
     print(db.get_all())

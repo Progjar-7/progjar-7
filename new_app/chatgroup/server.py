@@ -3,6 +3,7 @@ import socket
 import json
 from io import StringIO
 
+
 class ChatGroup:
     def __init__(self, host, port):
         self.host = host
@@ -24,8 +25,8 @@ class ChatGroup:
             "data": {
                 "room": room_name,
                 "username_pengirim": username,
-                "pesan": message
-            }
+                "pesan": message,
+            },
         }
 
         jsonized_msg = json.dumps(msg)
@@ -45,7 +46,7 @@ class ChatGroup:
         msg_to_send = {
             "tipe_pesan": "PESAN_FILE_GROUP",
             "data": {
-                "room" : room_name,
+                "room": room_name,
                 "username_penerima": username,
                 "filename": filename,
                 "file_content": file_content,
@@ -68,10 +69,7 @@ class ChatGroup:
 
         msg = {
             "tipe_pesan": "NOTIFIKASI_GROUP",
-            "data": {
-                "room": room_name,
-                "pesan": message
-            }
+            "data": {"room": room_name, "pesan": message},
         }
 
         jsonized_msg = json.dumps(msg)
@@ -86,34 +84,27 @@ class ChatGroup:
             jsonized_msg = json.dumps(
                 {
                     "tipe_pesan": "CREATE_GROUP_FAIL",
-                    "data": {
-                        "alasan": "Room sudah ada"
-                    }
+                    "data": {"alasan": "Room sudah ada"},
                 }
             )
 
             return bytes(f"{jsonized_msg}\r\n\r\n", encoding="utf-8")
 
-        self.groups[room_name] = {'clients': [], 'aliases': []}
+        self.groups[room_name] = {"clients": [], "aliases": []}
 
-        jsonized_msg = json.dumps({
-            "tipe_pesan": "CREATE_GROUP_SUCCESS",
-            "data": {
-                "pesan": "Room berhasil dibuat"
+        jsonized_msg = json.dumps(
+            {
+                "tipe_pesan": "CREATE_GROUP_SUCCESS",
+                "data": {"pesan": "Room berhasil dibuat"},
             }
-        })
+        )
 
         return bytes(f"{jsonized_msg}\r\n\r\n", encoding="utf-8")
 
     def join_group(self, room_name, username, client):
         if room_name not in self.groups:
             jsonized_msg = json.dumps(
-                {
-                    "tipe_pesan": "JOIN_GROUP_FAIL",
-                    "data": {
-                        "alasan": "Room tidak ada"
-                    }
-                }
+                {"tipe_pesan": "JOIN_GROUP_FAIL", "data": {"alasan": "Room tidak ada"}}
             )
 
             return bytes(f"{jsonized_msg}\r\n\r\n", encoding="utf-8")
@@ -122,12 +113,7 @@ class ChatGroup:
         self.groups[room_name]["aliases"].append(username)
 
         jsonized_msg = json.dumps(
-            {
-                "tipe_pesan": "JOIN_GROUP_SUCCESS",
-                "data": {
-                    "alasan": "Berhasil join"
-                }
-            }
+            {"tipe_pesan": "JOIN_GROUP_SUCCESS", "data": {"alasan": "Berhasil join"}}
         )
 
         return bytes(f"{jsonized_msg}\r\n\r\n", encoding="utf-8")
@@ -145,17 +131,16 @@ class ChatGroup:
 
                     if len(data) < num_bytes:
                         break
-                        
+
                     if d.endswith("\r\n\r\n"):
                         break
                 else:
                     break
-            
+
             result = buffer.getvalue()
             stripped_result = result.strip("\r\n\r\n")
 
             return stripped_result
-
 
         while True:
             message = recvall(4096, client)
@@ -173,8 +158,7 @@ class ChatGroup:
 
                     result = self.join_group(room_name, username, client)
 
-                    self.notification_all(
-                        f"{username} has join {room_name}", room_name)
+                    self.notification_all(f"{username} has join {room_name}", room_name)
                     client.sendall(result)
 
                 elif order == "FILEGROUP":
@@ -188,7 +172,9 @@ class ChatGroup:
 
                     content_file_string = content_file.getvalue()
 
-                    self.send_file_group(room_name, username, filename, content_file_string)
+                    self.send_file_group(
+                        room_name, username, filename, content_file_string
+                    )
 
                 elif order == "SENDGROUP":
                     room_name = data[1].strip()
@@ -205,27 +191,28 @@ class ChatGroup:
 
                         client.close()
                         self.notification_all(
-                            f'{username} has left the chat room {room_name}!', room_name, username)
+                            f"{username} has left the chat room {room_name}!",
+                            room_name,
+                            username,
+                        )
                         break
 
-                    self.broadcast_all(
-                        f"{username}: {message}", room_name, username)
+                    self.broadcast_all(f"{username}: {message}", room_name, username)
                 else:
                     print(f"process_client: {message}")
             else:
                 print("unknown command", message)
 
     def start(self):
-        print('Server is running and listening ...')
+        print("Server is running and listening ...")
         while True:
             client, address = self.server.accept()
-            print(f'Connection established with {str(address)}')
+            print(f"Connection established with {str(address)}")
 
-            client_thread = threading.Thread(
-                target=self.process_client, args=(client,))
+            client_thread = threading.Thread(target=self.process_client, args=(client,))
             client_thread.start()
 
 
 if __name__ == "__main__":
-    server = ChatGroup('127.0.0.1', 59000)
+    server = ChatGroup("127.0.0.1", 59000)
     server.start()

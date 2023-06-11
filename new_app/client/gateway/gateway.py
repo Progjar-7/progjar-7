@@ -10,8 +10,9 @@ from client_group import ChatGroupClient as ClientChatGroup
 from queue import Queue
 import database
 
+
 class Gateway(threading.Thread):
-    def __init__(self, addr: tuple = ('127.0.0.1', 11111)):
+    def __init__(self, addr: tuple = ("127.0.0.1", 11111)):
         print(f"Gateway diinisialisasi di {addr}")
         self.addr = addr
         self.realms: Dict = {}
@@ -23,13 +24,12 @@ class Gateway(threading.Thread):
         self.server_socket.listen(1)
 
         threading.Thread.__init__(self)
-    
+
     def add_realm(self, realm_name: str) -> str:
         if realm_name in self.realms:
-            return json.dumps({
-                "tipe_pesan": "GATEWAY_ADD_REALM_FAIL",
-                "alasan": "Realm sudah ada"
-            })
+            return json.dumps(
+                {"tipe_pesan": "GATEWAY_ADD_REALM_FAIL", "alasan": "Realm sudah ada"}
+            )
 
         private_server = ServerChatPrivate()
         private_server_host, private_server_port = private_server.server.getsockname()
@@ -46,21 +46,22 @@ class Gateway(threading.Thread):
                 "server": private_server,
                 "host": private_server_host,
                 "port": private_server_port,
-                "clients": {}
+                "clients": {},
             },
-
             "group": {
                 "server": group_server,
                 "host": group_server_host,
                 "port": group_server_port,
-                "clients": {}
-            }
+                "clients": {},
+            },
         }
 
-        return json.dumps({
-            "tipe_pesan": "GATEWAY_ADD_REALM_SUKSES",
-            "pesan": f"Realm {realm_name} dibuat"
-        })
+        return json.dumps(
+            {
+                "tipe_pesan": "GATEWAY_ADD_REALM_SUKSES",
+                "pesan": f"Realm {realm_name} dibuat",
+            }
+        )
 
     def listen(self, queue: Queue, connection: socket.socket):
         print("Listening the queue...")
@@ -88,11 +89,10 @@ class Gateway(threading.Thread):
         realm_name = user["realm_name"]
         
         if realm_name not in self.realms:
-            return json.dumps({
-                "tipe_pesan": "GATEWAY_OPEN_PRIVATE_FAIL",
-                "alasan": "Realm tidak ada"
-            })
-                
+            return json.dumps(
+                {"tipe_pesan": "GATEWAY_OPEN_PRIVATE_FAIL", "alasan": "Realm tidak ada"}
+            )
+
         host = self.realms[realm_name]["private"]["host"]
         port = self.realms[realm_name]["private"]["port"]
 
@@ -101,15 +101,20 @@ class Gateway(threading.Thread):
 
         self.realms[realm_name]["private"]["clients"][username] = private_client
 
-        listener_thread = threading.Thread(target=self.listen, args=(private_client.received_queue, client_gateway_connection))
+        listener_thread = threading.Thread(
+            target=self.listen,
+            args=(private_client.received_queue, client_gateway_connection),
+        )
         listener_thread.start()
 
         private_client.send_message(f"OPENPRIVATE {username}\r\n\r\n")
 
-        return json.dumps({
-            "tipe_pesan": "GATEWAY_OPEN_PRIVATE_SUKSES",
-            "pesan": "User berhasil online"
-        })
+        return json.dumps(
+            {
+                "tipe_pesan": "GATEWAY_OPEN_PRIVATE_SUKSES",
+                "pesan": "User berhasil online",
+            }
+        )
 
     def send_message_private(self, realm_name: str, username_from: str, username_to: str, msg: str) -> str:
         if realm_name not in self.realms:
@@ -165,6 +170,9 @@ class Gateway(threading.Thread):
             from_client.send_message(f"SENDPRIVATE {username_from} {username_to} {msg}\r\n\r\n")
             to_client.send_message(f"SENDPRIVATE {username_from} {username_to} {msg}\r\n\r\n")
 
+        return json.dumps(
+            {"tipe_pesan": "GATEWAY_SEND_PRIVATE_SUKSES", "pesan": "Pesan dikirimkan"}
+        )
 
     def process_request(self, client: socket.socket):
         def recvall(num_bytes, connection: socket.socket) -> str:
@@ -179,24 +187,24 @@ class Gateway(threading.Thread):
 
                     if len(data) < num_bytes:
                         break
-                        
+
                     if d.endswith("\r\n\r\n"):
                         break
                 else:
                     break
-            
+
             result = buffer.getvalue()
             stripped_result = result.strip("\r\n\r\n")
 
             return stripped_result
-    
+
         while True:
             try:
                 message = recvall(4096, client)
                 if message:
                     data = message.split(" ")
                     order = data[0].strip()
-                    
+
                     if order == "ADDREALM":
                         realm_name = data[1].strip()
 
@@ -253,17 +261,19 @@ class Gateway(threading.Thread):
                 break
 
     def run(self):
-        print('Server is running and listening ...')
+        print("Server is running and listening ...")
 
         while True:
             client, address = self.server_socket.accept()
-            print(f'Connection established in gateway with {str(address)}')
-            
-            client_thread = threading.Thread(target=self.process_request, args=(client,))
+            print(f"Connection established in gateway with {str(address)}")
+
+            client_thread = threading.Thread(
+                target=self.process_request, args=(client,)
+            )
             client_thread.start()
+
 
 if __name__ == "__main__":
     gateway = Gateway()
     gateway.start()
     print("Gateway open...")
-

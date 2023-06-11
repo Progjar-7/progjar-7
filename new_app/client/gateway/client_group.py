@@ -3,6 +3,7 @@ import socket
 from io import StringIO
 from queue import Queue
 
+
 class ChatGroupClient:
     def __init__(self, host: str, port: int):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -22,12 +23,12 @@ class ChatGroupClient:
 
                 if len(data) < num_bytes:
                     break
-                    
+
                 if d.endswith("\r\n\r\n"):
                     break
             else:
                 break
-        
+
         result = buffer.getvalue()
         stripped_result = result.strip("\r\n\r\n")
 
@@ -64,10 +65,10 @@ class ChatGroupClient:
                         message = self.message_queue.get()
 
                         if "EXIT" in message:
-                            self.client.sendall(message.encode('utf-8'))
+                            self.client.sendall(message.encode("utf-8"))
                             break
                         else:
-                            self.client.sendall(message.encode('utf-8'))
+                            self.client.sendall(message.encode("utf-8"))
         except Exception as e:
             print(f"An error occurred in process_messages: {e}")
         finally:
@@ -80,8 +81,9 @@ class ChatGroupClient:
         send_thread = threading.Thread(target=self.process_messages)
         send_thread.start()
 
+
 if __name__ == "__main__":
-    client = ChatGroupClient() # alias + roomname gausah diliat dulu
+    client = ChatGroupClient()  # alias + roomname gausah diliat dulu
     client.start_chat()
 
     while True:
