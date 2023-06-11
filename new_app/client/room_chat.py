@@ -8,6 +8,8 @@ from client_private import ChatPrivateClient
 from queue import Queue
 import threading
 
+import database
+
 User = user
 
 # communication with server
@@ -16,6 +18,7 @@ chat_private = ChatPrivateClient()
 messages = Queue()
 
 current_username = ""
+current_realm = ""
 
 def listen(queue: Queue):
     try:
@@ -98,14 +101,29 @@ def PrivateView(page: ft.Page):
     #   your_password.error_text = "Your account is not registered"
       # page.update()
     else:
-      auth_dialog.open = False
-      all_messages.controls.clear()
-      # connect to server client
-      chat_private.start_chat()
-      chat_private.send_message(f"OPENPRIVATE {your_username.value}")
-      
-      page.update()
-      loop_show_messages()
+      user = database.get_user(username=your_username.value)
+      if user is None:
+         your_username.error_text = "User tidak dikenali"
+         page.update()
+      elif user["password"] != your_password.value:
+         your_password.error_text = "Salah Password"
+         page.update()
+      else:
+        global current_username
+        current_username = user["username"]
+
+        global current_realm
+        current_realm = user["realm_name"]
+
+        auth_dialog.open = False
+        all_messages.controls.clear()
+
+        # connect to server client
+        chat_private.start_chat()
+        chat_private.send_message(f"OPENPRIVATE {current_username}")
+        
+        page.update()
+        loop_show_messages()
     
   # ========menambah list chat
   def send_message_click(e):

@@ -2,6 +2,21 @@ import json
 import os
 from pathlib import Path
 from operator import itemgetter
+from typing import Optional, Dict
+
+def get_user(username: str) -> Optional[Dict[str, str]]:    
+    with open('user.json', 'r') as f:
+        data = json.load(f)
+        for item in data['data']:
+            if item['username'] == username:
+                return {
+                    "username": item['username'],
+                    "password": item['password'],
+                    "realm_name": item['realm_name'],
+                }
+    f.close()
+
+    return None
 
 class Database:
     def __init__(self, table_name):
