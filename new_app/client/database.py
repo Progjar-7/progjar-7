@@ -17,6 +17,14 @@ def get_user(username: str) -> Optional[Dict[str, str]]:
     f.close()
 
     return None
+# add new user to database
+def add_user(username: str, password: str) -> None:
+    Database('user.json').insert_data({
+        "username": username,
+        "realm_name": "default",
+        "password": password,
+    })
+
 
 class Database:
     def __init__(self, table_name):

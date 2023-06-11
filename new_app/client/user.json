@@ -19,6 +19,11 @@
             "username": "user4",
             "password": "12345",
             "realm_name": "realm2"
+        },
+        {
+            "username": "userA",
+            "realm_name": "default",
+            "password": "passwordA"
         }
     ]
 }

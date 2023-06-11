@@ -13,13 +13,12 @@ def RegisterView(page: ft.Page):
       username_field.error_text = "User already exist"
       page.update()
     else:
-      # database.add_user(username=username_field.value, realm_name=realm_field.value, password=password_field.value)
+      database.add_user(username=username_field.value, password=password_field.value)
       username_field.value = ""
       password_field.value = ""
       page.go("/login")
-    # print("username: ", username_field.value)
-    # print("realm: ", realm_field.value)
-    # print("password: ", password_field.value)
+    print("username: ", username_field.value)
+    print("password: ", password_field.value)
 
   def login(e):
     username_field.value = ""
@@ -28,12 +27,6 @@ def RegisterView(page: ft.Page):
 
   username_field = ft.TextField(
       label="Username",
-      autofocus=True,
-      on_submit=register,
-  )
-  
-  realm_field = ft.TextField(
-      label="Realm name",
       autofocus=True,
       on_submit=register,
   )
@@ -49,7 +42,6 @@ def RegisterView(page: ft.Page):
           f"Register",
           size=50),
     username_field,
-    realm_field,
     password_field,
     ft.Row([
         ft.ElevatedButton(text="Register", on_click=register),
