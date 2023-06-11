@@ -9,6 +9,7 @@ def RegisterView(page: ft.Page):
   
   def register(e):
     print("username: ", username_field.value)
+    print("realm: ", realm_field.value)
     print("password: ", password_field.value)
     page.go("/login")
 
@@ -19,6 +20,12 @@ def RegisterView(page: ft.Page):
 
   username_field = ft.TextField(
       label="Username",
+      autofocus=True,
+      on_submit=register,
+  )
+  
+  realm_field = ft.TextField(
+      label="Realm name",
       autofocus=True,
       on_submit=register,
   )
@@ -34,6 +41,7 @@ def RegisterView(page: ft.Page):
           f"Register",
           size=50),
     username_field,
+    realm_field,
     password_field,
     ft.Row([
         ft.ElevatedButton(text="Register", on_click=register),
