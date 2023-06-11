@@ -43,7 +43,7 @@ def PrivateView(page: ft.Page):
   
   all_messages = ft.Column(scroll="auto", auto_scroll=True)
 
-  SECRET_KEY = "PROGJAR"
+  # SECRET_KEY = "PROGJAR"
   
   def loop_show_messages():
       while True:
@@ -87,46 +87,21 @@ def PrivateView(page: ft.Page):
   
   # Show all messages
   def get_message(e):
-    if not your_username.value:
-      your_username.error_text = "Please enter your name"
-      page.update()
-    elif not your_username_destination.value:
+    if not your_username_destination.value:
       your_username_destination.error_text = "Please enter your partner"
       page.update()
-    elif not your_password.value:
-      your_password.error_text = "Please enter your password"
-      page.update()
-    # elif your_username.value != "messi" or your_password.value != "surabaya":
-    #   your_username.error_text = "Your account is not registered"
-    #   your_password.error_text = "Your account is not registered"
-      # page.update()
     else:
-      user = database.get_user(username=your_username.value)
-      if user is None:
-         your_username.error_text = "User tidak dikenali"
-         page.update()
-      elif user["password"] != your_password.value:
-         your_password.error_text = "Salah Password"
-         page.update()
-      else:
-        page.client_storage.set("username", user["username"])
-        page.client_storage.set("realm_name", user["realm_name"])
+      auth_dialog.open = False
+      all_messages.controls.clear()
+      page.client_storage.set("destination", your_username_destination.value)
+      # connect to server client
+      chat_private.start_chat()
 
-        json_user = json.dumps(user)
-        token = encrypt(plain_text=json_user, secret_key=SECRET_KEY)
-        page.client_storage.set("token", token)
-
-        auth_dialog.open = False
-        all_messages.controls.clear()
-
-        # connect to server client
-        chat_private.start_chat()
-
-        current_username = page.client_storage.get("username")
-        chat_private.send_message(f"OPENPRIVATE {current_username}")
+      current_username = page.client_storage.get("username")
+      chat_private.send_message(f"OPENPRIVATE {current_username}")
         
-        page.update()
-        loop_show_messages()
+      page.update()
+      loop_show_messages()
     
   # ========menambah list chat
   def send_message_click(e):

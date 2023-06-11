@@ -1,5 +1,5 @@
 import flet as ft
-
+import database
 
 def RegisterView(page: ft.Page):
   page.theme_mode = "light"
@@ -8,10 +8,18 @@ def RegisterView(page: ft.Page):
   page.scroll = "auto"
   
   def register(e):
-    print("username: ", username_field.value)
-    print("realm: ", realm_field.value)
-    print("password: ", password_field.value)
-    page.go("/login")
+    user = database.get_user(username=username_field.value)
+    if user is not None:
+      username_field.error_text = "User already exist"
+      page.update()
+    else:
+      # database.add_user(username=username_field.value, realm_name=realm_field.value, password=password_field.value)
+      username_field.value = ""
+      password_field.value = ""
+      page.go("/login")
+    # print("username: ", username_field.value)
+    # print("realm: ", realm_field.value)
+    # print("password: ", password_field.value)
 
   def login(e):
     username_field.value = ""

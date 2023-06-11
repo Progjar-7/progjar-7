@@ -1,4 +1,9 @@
 import flet as ft
+import database
+import json
+from flet.security import encrypt, decrypt
+
+SECRET_KEY = "PROGJAR"
 
 def LoginView(page: ft.Page):
   page.theme_mode = "light"
@@ -7,11 +12,23 @@ def LoginView(page: ft.Page):
   page.scroll="auto"
   
   def login(e):
-    print("username: ", username_field.value)
-    print("password: ", password_field.value)
-    page_layout.open = False
-    page_layout.update()
-    page.go("/")
+    user = database.get_user(username=username_field.value)
+    if user is None:
+      username_field.error_text = "User tidak dikenali"
+      page.update()
+    elif user["password"] != password_field.value:
+      password_field.error_text = "Salah Password"
+      page.update()
+    else:
+      page.client_storage.set("username", user["username"])
+      page.client_storage.set("realm_name", user["realm_name"])
+
+      json_user = json.dumps(user)
+      token = encrypt(plain_text=json_user, secret_key=SECRET_KEY)
+      page.client_storage.set("token", token)
+      page_layout.open = False
+      page_layout.update()
+      page.go("/")
   
   def register(e):
     # page_layout.open = False

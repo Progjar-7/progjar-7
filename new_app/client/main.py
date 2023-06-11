@@ -13,6 +13,6 @@ def main(page:ft.Page):
   page.on_route_change = myRouter.route_change
 
   page.add(myRouter.body)
-  page.go("/")
+  page.go("/login")
 
 ft.app(target=main)
