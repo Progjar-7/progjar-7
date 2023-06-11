@@ -11,6 +11,7 @@ def Navbar(page):
     actions=[
       ft.IconButton(ft.icons.HOME, on_click=lambda _: page.go('/')),
       ft.IconButton(ft.icons.PERSON_ROUNDED, on_click=lambda _: page.go('/private')),
+      ft.IconButton(ft.icons.GROUP_ADD_ROUNDED, on_click=lambda _: page.go('/add-group'))
       # ft.IconButton(ft.icons.GROUP_ADD_ROUNDED, on_click=lambda _: page.go('/group'))
       ]
     )

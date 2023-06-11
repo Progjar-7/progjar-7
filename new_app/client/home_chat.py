@@ -3,10 +3,10 @@ import flet as ft
 def HomeView(page):
   content = ft.Column(
     [
-      ft.Row(
+      ft.ResponsiveRow(
         [
           ft.Text(
-            "Welcome to Our Simple Chat",
+            f"Welcome to Our Simple Chat!",
             size=50)
           ],
         alignment=ft.MainAxisAlignment.CENTER

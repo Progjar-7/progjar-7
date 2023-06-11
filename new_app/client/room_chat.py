@@ -49,7 +49,7 @@ def PrivateView(page: ft.Page):
               print("dari loop show: ", result)
 
               match result['tipe_pesan']:
-                 case 'PESAN_PRIVATE':
+                case 'PESAN_PRIVATE':
                     pengirim = result['data']['username_pengirim']
 
                     if pengirim == current_username:
@@ -58,14 +58,14 @@ def PrivateView(page: ft.Page):
                       )
 
                     else:
-                       all_messages.controls.append(
+                      all_messages.controls.append(
                         User.get_user_interface(username=pengirim, is_me=False, message=result['data']['pesan'])
                       )
 
                     page_layout.visible = True
                     page.update()
 
-                 case 'PESAN_FILE_PRIVATE':
+                case 'PESAN_FILE_PRIVATE':
                     pengirim = result['data']['username_pengirim']
 
                     if pengirim == current_username:
@@ -74,7 +74,7 @@ def PrivateView(page: ft.Page):
                       )
 
                     else:
-                       all_messages.controls.append(
+                      all_messages.controls.append(
                         User.get_file_interface(username=pengirim, is_me=False, filename=result['data']['filename'], content=result['data']['file_content'])
                       )
 
