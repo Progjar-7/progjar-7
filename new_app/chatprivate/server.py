@@ -16,7 +16,7 @@ class ChatPrivate:
         self.groups = {}
         self.locker = threading.Lock()
         
-        with open("./database/testUser.json") as file:
+        with open("../database/testUser.json") as file:
             userbase = json.load(file)
             self.userbase = userbase['data']
             print(self.userbase)
