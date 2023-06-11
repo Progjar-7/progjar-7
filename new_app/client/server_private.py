@@ -87,17 +87,17 @@ class ChatPrivate:
                 pass
             
     def open_connection_for(self, username, client):
-        if username in self.groups:
-            jsonized_msg = json.dumps(
-                {
-                    "tipe_pesan": "OPEN_KONEKSI_FAIL",
-                    "data": {
-                        "alasan": "User sudah ada"
-                    }
-                }
-            )
+        # if username in self.groups:
+        #     jsonized_msg = json.dumps(
+        #         {
+        #             "tipe_pesan": "OPEN_KONEKSI_FAIL",
+        #             "data": {
+        #                 "alasan": "User sudah ada"
+        #             }
+        #         }
+        #     )
 
-            return bytes(f"{jsonized_msg}\r\n\r\n", encoding="utf-8")
+        #     return bytes(f"{jsonized_msg}\r\n\r\n", encoding="utf-8")
 
         self.groups[username] = client
 

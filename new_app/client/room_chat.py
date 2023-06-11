@@ -1,6 +1,7 @@
 import flet as ft
 import base64
 from flet import icons
+from flet.security import encrypt, decrypt
 
 import json
 import user
@@ -16,9 +17,6 @@ User = user
 chat_private = ChatPrivateClient()
 
 messages = Queue()
-
-current_username = ""
-current_realm = ""
 
 def listen(queue: Queue):
     try:
@@ -44,6 +42,8 @@ def PrivateView(page: ft.Page):
   page.scroll="auto"
   
   all_messages = ft.Column(scroll="auto", auto_scroll=True)
+
+  SECRET_KEY = "PROGJAR"
   
   def loop_show_messages():
       while True:
@@ -55,7 +55,7 @@ def PrivateView(page: ft.Page):
                 case 'PESAN_PRIVATE':
                     pengirim = result['data']['username_pengirim']
 
-                    if pengirim == current_username:
+                    if pengirim == page.client_storage.get("username"):
                       all_messages.controls.append(
                         User.get_user_interface(username=pengirim, is_me=True, message=result['data']['pesan'])
                       )
@@ -71,7 +71,7 @@ def PrivateView(page: ft.Page):
                 case 'PESAN_FILE_PRIVATE':
                     pengirim = result['data']['username_pengirim']
 
-                    if pengirim == current_username:
+                    if pengirim == page.client_storage.get("username"):
                       all_messages.controls.append(
                         User.get_file_interface(username=pengirim, is_me=True, filename=result['data']['filename'], content=result['data']['file_content'])
                       )
@@ -109,17 +109,20 @@ def PrivateView(page: ft.Page):
          your_password.error_text = "Salah Password"
          page.update()
       else:
-        global current_username
-        current_username = user["username"]
+        page.client_storage.set("username", user["username"])
+        page.client_storage.set("realm_name", user["realm_name"])
 
-        global current_realm
-        current_realm = user["realm_name"]
+        json_user = json.dumps(user)
+        token = encrypt(plain_text=json_user, secret_key=SECRET_KEY)
+        page.client_storage.set("token", token)
 
         auth_dialog.open = False
         all_messages.controls.clear()
 
         # connect to server client
         chat_private.start_chat()
+
+        current_username = page.client_storage.get("username")
         chat_private.send_message(f"OPENPRIVATE {current_username}")
         
         page.update()
@@ -128,11 +131,8 @@ def PrivateView(page: ft.Page):
   # ========menambah list chat
   def send_message_click(e):
     if chat_field.value:
-      chat_private.send_message(f"SENDPRIVATE {your_username.value} {your_username_destination.value} {chat_field.value}")
-      
-      # global berarti mengakses variable current_username yang didefine di luar fungsi
-      global current_username
-      current_username = your_username.value
+      username = page.client_storage.get("username")
+      chat_private.send_message(f"SENDPRIVATE {username} {your_username_destination.value} {chat_field.value}")
       
       chat_field.value = ""
       loop_show_messages()
