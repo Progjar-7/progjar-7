@@ -26,6 +26,29 @@ class ChatPrivate(threading.Thread):
                 except ConnectionResetError:
                     continue
 
+    def send_single(self, username_destination, username_from, username_to, message):
+        # if username_from not in self.groups:
+        #     return 
+        
+        msg_to_send = {
+            "tipe_pesan": "PESAN_PRIVATE",
+            "data": {
+                "username_pengirim" : username_from,
+                "username_penerima": username_to,
+                "pesan": message,
+            },
+        }
+
+        jsonized_msg = json.dumps(msg_to_send)
+        print(msg_to_send)
+
+        with self.locker:
+            try:
+                client_from = self.groups[username_destination]
+                client_from.sendall(bytes(f"{jsonized_msg}\r\n\r\n", encoding="utf-8"))
+            except ConnectionResetError:
+                pass
+
     def send_to(self, username_from, username_to, message):
         if username_from not in self.groups or username_to not in self.groups:
             return
@@ -52,6 +75,27 @@ class ChatPrivate(threading.Thread):
             try:
                 client_to = self.groups[username_to]
                 client_to.sendall(bytes(f"{jsonized_msg}\r\n\r\n", encoding="utf-8"))
+            except ConnectionResetError:
+                pass
+    
+    def send_file_single(self, username_destination, username_from, username_to, filename, file_content):
+        msg_to_send = {
+            "tipe_pesan": "PESAN_FILE_PRIVATE",
+            "data": {
+                "username_pengirim" : username_from,
+                "username_penerima": username_to,
+                "filename": filename,
+                "file_content": file_content,
+            },
+        }
+
+        jsonized_msg = json.dumps(msg_to_send)
+        print(msg_to_send)
+        
+        with self.locker:
+            try:
+                client_from = self.groups[username_destination]
+                client_from.sendall(bytes(f"{jsonized_msg}\r\n\r\n", encoding="utf-8"))
             except ConnectionResetError:
                 pass
 
@@ -86,18 +130,17 @@ class ChatPrivate(threading.Thread):
                 pass
             
     def open_connection_for(self, username, client):
-        if username in self.groups:
-            jsonized_msg = json.dumps(
-                {
-                    "tipe_pesan": "OPEN_KONEKSI_FAIL",
-                    "data": {
-                        "alasan": "User sudah ada"
-                    }
-                }
-            )
+        # if username in self.groups:
+            # jsonized_msg = json.dumps(
+            #     {
+            #         "tipe_pesan": "OPEN_KONEKSI_FAIL",
+            #         "data": {
+            #             "alasan": "User sudah ada"
+            #         }
+            #     }
+            # )
 
-            return bytes(f"{jsonized_msg}\r\n\r\n", encoding="utf-8")
-
+            # return bytes(f"{jsonized_msg}\r\n\r\n", encoding="utf-8")
         self.groups[username] = client
 
         jsonized_msg = json.dumps(
@@ -169,6 +212,20 @@ class ChatPrivate(threading.Thread):
                         content_file_string = content_file.getvalue()
 
                         self.send_file_to(username_from, username_to, filename, content_file_string)
+
+                    elif order == "SENDFILESINGLE":
+                        username_dest = data[1].strip()
+                        username_from = data[2].strip()
+                        username_to = data[3].strip()
+                        filename = data[4].strip()
+
+                        content_file = StringIO()
+                        for m in data[5]:
+                            content_file.write(m)
+
+                        content_file_string = content_file.getvalue()
+
+                        self.send_file_single(username_dest, username_from, username_to, filename, content_file_string)
 
             except ConnectionResetError:
                 print("Disconnected from the server.")

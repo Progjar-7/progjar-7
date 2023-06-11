@@ -16,17 +16,6 @@ class ChatPrivate:
         self.groups = {}
         self.locker = threading.Lock()
 
-    def broadcast_all(self, message, room_name):
-        if room_name not in self.groups:
-            return
-        
-        with self.locker:
-            for client in self.groups[room_name]["clients"]:
-                try:
-                    client.sendall(message)
-                except ConnectionResetError:
-                    continue
-
     def send_to(self, username_from, username_to, message):
         if username_from not in self.groups or username_to not in self.groups:
             return

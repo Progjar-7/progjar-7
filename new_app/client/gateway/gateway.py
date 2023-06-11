@@ -8,6 +8,7 @@ from client_private import ChatPrivateClient as ClientChatPrivate
 from server_group import ChatGroup as ServerChatGroup
 from client_group import ChatGroupClient as ClientChatGroup
 from queue import Queue
+import database
 
 class Gateway(threading.Thread):
     def __init__(self, addr: tuple = ('127.0.0.1', 11111)):
@@ -37,6 +38,8 @@ class Gateway(threading.Thread):
         group_server = ServerChatGroup()
         group_server_host, group_server_port = group_server.server.getsockname()
         group_server.start()
+
+
 
         self.realms[realm_name] = {
             "private": {
@@ -74,7 +77,16 @@ class Gateway(threading.Thread):
         except Exception as e:
             print(f"Gateway listen: An error occurred in received_message: {e}")
 
-    def open_private_connection_for(self, realm_name: str, username: str, client_gateway_connection: socket.socket) -> str:
+    def open_private_connection_for(self, username: str, client_gateway_connection: socket.socket) -> str:
+        user = database.get_user(username=username)
+        if user is None:
+            return json.dumps({
+                "tipe_pesan": "GATEWAY_OPEN_PRIVATE_FAIL",
+                "alasan": "User tidak dikenali"
+            })
+        
+        realm_name = user["realm_name"]
+        
         if realm_name not in self.realms:
             return json.dumps({
                 "tipe_pesan": "GATEWAY_OPEN_PRIVATE_FAIL",
@@ -99,26 +111,59 @@ class Gateway(threading.Thread):
             "pesan": "User berhasil online"
         })
 
-    def send_msg_internal_realm(self, realm_name: str, username_from: str, username_to: str, msg: str) -> str:
+    def send_message_private(self, realm_name: str, username_from: str, username_to: str, msg: str) -> str:
         if realm_name not in self.realms:
             return json.dumps({
                 "tipe_pesan": "GATEWAY_SEND_PRIVATE_FAIL",
                 "alasan": "Realm tidak ada"
             })
         
-        if username_from not in self.realms[realm_name]["private"]["clients"]:
+        if username_from not in self.realms["private"]["clients"]:
             return json.dumps({
                 "tipe_pesan": "GATEWAY_SEND_PRIVATE_FAIL",
                 "alasan": "User pengirim tidak ditemukan"
             })
         
-        private_client = self.realms[realm_name]["private"]["clients"][username_from]
+        private_client = self.realms["private"]["clients"][username_from]
         private_client.send_message(f"SENDPRIVATE {username_from} {username_to} {msg}\r\n\r\n")
 
         return json.dumps({
             "tipe_pesan": "GATEWAY_SEND_PRIVATE_SUKSES",
             "pesan": "Pesan dikirimkan"
         })
+    
+    def send_message_multi_realm(self, username_from: str, username_to: str, msg: str) -> str:
+        user_from = database.get_user(username=username_from)
+        if user_from is None:
+            return json.dumps({
+                "tipe_pesan": "GATEWAY_SEND_PRIVATE_MULTI_FAIL",
+                "alasan": "Username pengirim tidak ada"
+            })
+        
+        user_to = database.get_user(username=username_to)
+        if user_to is None:
+            return json.dumps({
+                "tipe_pesan": "GATEWAY_SEND_PRIVATE_MULTI_FAIL",
+                "alasan": "Username penerima tidak ada"
+            })
+        
+        pass
+
+    def send_message_multi(self, username_from: str, username_to: str, msg: str):
+        key = f"{username_from}+{username_to}"
+
+        data = self.realms[key]
+
+        from_client = data["from_client"]
+        to_client = data["to_client"]
+        is_in_different_realm = data["is_diff"]
+
+        if is_in_different_realm:
+            from_client.send_message(f"SENDPRIVATE {username_from} {username_to} {msg}\r\n\r\n")
+            to_client.send_message(f"CHAT_EKSTERNAL {username_from} {username_to} {msg}\r\n\r\n")
+        else:
+            from_client.send_message(f"SENDPRIVATE {username_from} {username_to} {msg}\r\n\r\n")
+            to_client.send_message(f"SENDPRIVATE {username_from} {username_to} {msg}\r\n\r\n")
 
 
     def process_request(self, client: socket.socket):
@@ -160,25 +205,42 @@ class Gateway(threading.Thread):
                         client.sendall(f"{result}\r\n\r\n".encode())
 
                     elif order == "OPENPRIVATE":
-                        realm_name = data[1].strip()
-                        username = data[2].strip()
-
-                        result = self.open_private_connection_for(realm_name=realm_name, username=username, client_gateway_connection=client)
+                        username = data[1].strip()
+                        result = self.open_private_connection_for(username=username, client_gateway_connection=client)
                         print(result)
                         client.sendall(f"{result}\r\n\r\n".encode())
 
-                    elif order == "SENDPRIVATESINGLE":
-                        realm_name = data[1].strip()
-                        username_from = data[2].strip()
-                        username_to = data[3].strip()
+                    elif order == "SENDPRIVATE":
+                        username_from = data[1].strip()
+                        username_to = data[2].strip()
 
                         msg = ""
                         for w in data[4:]:
                             msg = "{} {}".format(msg, w)
 
-                        result = self.send_msg_internal_realm(realm_name=realm_name, username_from=username_from, username_to=username_to, msg=msg)
+                        result = self.send_message_private(username_from=username_from, username_to=username_to, msg=msg)
                         print(result)
                         client.sendall(f"{result}\r\n\r\n".encode())
+
+                    elif order == "FILEPRIVATE":
+                        username_from = data[1].strip()
+                        username_to = data[2].strip()
+                        filename = data[3].strip()
+
+                        content_file = StringIO()
+                        for m in data[4]:
+                            content_file.write(m)
+
+                        content_file_string = content_file.getvalue()
+                    
+                    elif order == "OPENPRIVATEMULTI":
+                        username_from = data[1].strip()
+                        username_to = data[2].strip()
+                        host = data[3].strip()
+                        port = data[4].strip()
+
+                        key = f"{username_from}+{username_to}"
+
 
             except ConnectionResetError:
                 print("Disconnected from the server.")
