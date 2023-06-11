@@ -15,6 +15,11 @@ class ChatPrivate:
         self.server.listen(1)
         self.groups = {}
         self.locker = threading.Lock()
+        
+        with open("./database/testUser.json") as file:
+            userbase = json.load(file)
+            self.userbase = userbase['data']
+            print(self.userbase)
 
     def broadcast_all(self, message, room_name):
         if room_name not in self.groups:
@@ -86,7 +91,31 @@ class ChatPrivate:
             except ConnectionResetError:
                 pass
             
-    def open_connection_for(self, username, client):
+    def open_connection_for(self, username, password, client):
+        if username not in self.userbase:
+            jsonized_msg = json.dumps(
+                {
+                    "tipe_pesan": "OPEN_KONEKSI_FAIL",
+                    "data": {
+                        "alasan": "User tidak ada"
+                    }
+                }
+            )
+
+            return bytes(f"{jsonized_msg}\r\n\r\n", encoding="utf-8")
+        
+        if password != self.userbase[username]:
+            jsonized_msg = json.dumps(
+                {
+                    "tipe_pesan": "OPEN_KONEKSI_FAIL",
+                    "data": {
+                        "alasan": "Password salah"
+                    }
+                }
+            )
+
+            return bytes(f"{jsonized_msg}\r\n\r\n", encoding="utf-8")
+        
         if username in self.groups:
             jsonized_msg = json.dumps(
                 {
@@ -111,7 +140,7 @@ class ChatPrivate:
         )
 
         return bytes(f"{jsonized_msg}\r\n\r\n", encoding="utf-8")
-    
+
     def process_private_client(self, client):
         def recvall(num_bytes, connection) -> str:
             buffer = StringIO()
@@ -143,11 +172,15 @@ class ChatPrivate:
                     data = message.split(" ")
                     order = data[0].strip()
 
+                    print(data)
+
                     if order == "OPENPRIVATE":
                         username = data[1].strip()
-                        result = self.open_connection_for(username, client)
-                        client.send(result)
+                        password = data[2].strip()
 
+                        result = self.open_connection_for(username, password, client)
+                        client.send(result)
+                        
                     elif order == "SENDPRIVATE":
                         username_from = data[1].strip()
                         username_to = data[2].strip()

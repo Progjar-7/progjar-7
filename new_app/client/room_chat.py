@@ -102,7 +102,7 @@ def main(page: ft.Page):
       all_messages.controls.clear()
       # connect to server client
       chat_private.start_chat()
-      chat_private.send_message(f"OPENPRIVATE {your_username.value}")
+      chat_private.send_message(f"OPENPRIVATE {your_username.value} {your_password.value}")
       
       page.update()
       loop_show_messages()
