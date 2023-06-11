@@ -34,7 +34,7 @@ def listen(queue: Queue):
         print(f"An error occurred in received_message: {e}")
 
 # main page
-def main(page: ft.Page):
+def PrivateView(page: ft.Page):
   page.theme_mode = "light"
   page.horizontal_alignment = "stretch"
   page.title = "Chat"
@@ -199,10 +199,10 @@ def main(page: ft.Page):
   ])          
     
   # =========Add everything to the page
-  page.add(page_layout)
+  return page_layout
 
 # Thread
 receiver_thread = threading.Thread(target=listen, args=(chat_private.received_queue,))
 receiver_thread.start()
 
-ft.app(target=main)
+# ft.app(target=main)
