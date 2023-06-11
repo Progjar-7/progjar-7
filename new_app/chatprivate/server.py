@@ -1,6 +1,7 @@
 import threading
 import socket
 from queue import Queue
+from io import StringIO
 import json
 
 class ChatPrivate:
@@ -14,7 +15,6 @@ class ChatPrivate:
         self.server.listen(1)
         self.groups = {}
         self.locker = threading.Lock()
-
 
     def broadcast_all(self, message, room_name):
         if room_name not in self.groups:
@@ -46,14 +46,43 @@ class ChatPrivate:
         with self.locker:
             try:
                 client_from = self.groups[username_from]
-                client_from.sendall(bytes(jsonized_msg, encoding="utf-8"))
+                client_from.sendall(bytes(f"{jsonized_msg}\r\n\r\n", encoding="utf-8"))
             except ConnectionResetError:
                 pass
 
             try:
                 client_to = self.groups[username_to]
-                client_to.sendall(bytes(jsonized_msg, encoding="utf-8"))
+                client_to.sendall(bytes(f"{jsonized_msg}\r\n\r\n", encoding="utf-8"))
+            except ConnectionResetError:
+                pass
 
+    def send_file_to(self, username_from, username_to, filename, file_content):
+        if username_from not in self.groups or username_to not in self.groups:
+            return
+        
+        msg_to_send = {
+            "tipe_pesan": "PESAN_FILE_PRIVATE",
+            "data": {
+                "username_pengirim" : username_from,
+                "username_penerima": username_to,
+                "filename": filename,
+                "file_content": file_content,
+            },
+        }
+
+        jsonized_msg = json.dumps(msg_to_send)
+        print(msg_to_send)
+        
+        with self.locker:
+            try:
+                client_from = self.groups[username_from]
+                client_from.sendall(bytes(f"{jsonized_msg}\r\n\r\n", encoding="utf-8"))
+            except ConnectionResetError:
+                pass
+
+            try:
+                client_to = self.groups[username_to]
+                client_to.sendall(bytes(f"{jsonized_msg}\r\n\r\n", encoding="utf-8"))
             except ConnectionResetError:
                 pass
             
@@ -68,7 +97,7 @@ class ChatPrivate:
                 }
             )
 
-            return bytes(jsonized_msg, encoding="utf-8")
+            return bytes(f"{jsonized_msg}\r\n\r\n", encoding="utf-8")
 
         self.groups[username] = client
 
@@ -81,12 +110,35 @@ class ChatPrivate:
             }
         )
 
-        return bytes(jsonized_msg, encoding="utf-8")
+        return bytes(f"{jsonized_msg}\r\n\r\n", encoding="utf-8")
     
     def process_private_client(self, client):
+        def recvall(num_bytes, connection) -> str:
+            buffer = StringIO()
+
+            while True:
+                data = connection.recv(num_bytes)
+                if data:
+                    print(data)
+                    d = data.decode()
+                    buffer.write(d)
+
+                    if len(data) < num_bytes:
+                        break
+                        
+                    if d.endswith("\r\n\r\n"):
+                        break
+                else:
+                    break
+            
+            result = buffer.getvalue()
+            stripped_result = result.strip("\r\n\r\n")
+
+            return stripped_result
+
         while True:
             try:
-                message = client.recv(4096).decode()
+                message = recvall(4096, client)
                 if message:
                     data = message.split(" ")
                     order = data[0].strip()
@@ -105,6 +157,20 @@ class ChatPrivate:
                             msg = "{} {}".format(msg, w)
 
                         self.send_to(username_from, username_to, msg)
+
+                    elif order == "FILEPRIVATE":
+                        username_from = data[1].strip()
+                        username_to = data[2].strip()
+                        filename = data[3].strip()
+
+                        content_file = StringIO()
+                        for m in data[4]:
+                            content_file.write(m)
+
+                        content_file_string = content_file.getvalue()
+
+                        self.send_file_to(username_from, username_to, filename, content_file_string)
+
             except ConnectionResetError:
                 print("Disconnected from the server.")
                 break

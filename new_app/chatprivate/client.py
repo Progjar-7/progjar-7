@@ -1,6 +1,6 @@
 import threading
 import socket
-import time
+from io import StringIO
 from queue import Queue
 
 class ChatPrivateClient:
@@ -11,12 +11,34 @@ class ChatPrivateClient:
         self.received_queue = Queue()
         self.locker = threading.Lock()
 
-    def receive_messages(self):
+    def recvall(self, num_bytes) -> str:
+        buffer = StringIO()
+
+        while True:
+            data = self.client.recv(num_bytes)
+            if data:
+                d = data.decode()
+                buffer.write(d)
+
+                if len(data) < num_bytes:
+                    break
+                    
+                if d.endswith("\r\n\r\n"):
+                    break
+            else:
+                break
+        
+        result = buffer.getvalue()
+        stripped_result = result.strip("\r\n\r\n")
+
+        return stripped_result
+
+    def receive_messages(self):        
         try:
             while True:
-                message = self.client.recv(4096).decode('utf-8')
+                message = self.recvall(4096)
                 if message:
-                    # print(message) # yang ini
+                    print(message) # yang ini
                     self.received_queue.put(message)
         except ConnectionResetError:
             print("Disconnected from the server.")
@@ -30,7 +52,7 @@ class ChatPrivateClient:
     def send_message(self, message):
         try:
             with self.locker:
-                self.message_queue.put(message)
+                self.message_queue.put(f"{message}\r\n\r\n")
         except Exception as e:
             print(f"An error occurred in send_message: {e}")
 

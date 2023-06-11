@@ -22,8 +22,7 @@ def listen(queue: Queue):
         while True:
           if not queue.empty():
               rcv = queue.get()
-              reformat_rcv = rcv.replace("'", '"')
-              result = json.loads(reformat_rcv)
+              result = json.loads(rcv)
 
               messages.put(result)
 
@@ -61,6 +60,22 @@ def main(page: ft.Page):
                     else:
                        all_messages.controls.append(
                         User.get_user_interface(username=pengirim, is_me=False, message=result['data']['pesan'])
+                      )
+
+                    page_layout.visible = True
+                    page.update()
+
+                 case 'FILE_PRIVATE':
+                    pengirim = result['data']['username_pengirim']
+
+                    if pengirim == current_username:
+                      all_messages.controls.append(
+                        User.get_user_interface(username=pengirim, is_me=True, message=result['data']['file_content'])
+                      )
+
+                    else:
+                       all_messages.controls.append(
+                        User.get_user_interface(username=pengirim, is_me=False, message=result['data']['file_content'])
                       )
 
                     page_layout.visible = True
@@ -108,11 +123,11 @@ def main(page: ft.Page):
   # ============= Bagian upload file
   def handle_file_upload(e: ft.FilePickerResultEvent):
     if (e.files) and len(e.files) > 0:
+       filename = e.files[0].name
+
        with open(e.files[0].path, "rb") as f:
           content = base64.b64encode(f.read()).decode()
-          print(content)
-
-          # TODO: protokol upload file
+          chat_private.send_message(f"FILEPRIVATE {your_username.value} {your_username_destination.value} {filename} {content}")
 
   file_picker = ft.FilePicker(on_result=handle_file_upload)
   page.overlay.append(file_picker)

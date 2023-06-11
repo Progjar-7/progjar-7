@@ -1,7 +1,7 @@
 import threading
 import socket
 import json
-
+from io import StringIO
 
 class ChatGroup:
     def __init__(self, host, port):
@@ -29,7 +29,7 @@ class ChatGroup:
         }
 
         jsonized_msg = json.dumps(msg)
-        response = bytes(jsonized_msg, encoding="utf-8")
+        response = bytes(f"{jsonized_msg}\r\n\r\n", encoding="utf-8")
 
         with self.locker:
             for client in self.groups[room_name]["clients"]:
@@ -38,7 +38,29 @@ class ChatGroup:
                 except ConnectionResetError:
                     continue
 
-        
+    def send_file_group(self, room_name, username, filename, file_content):
+        if room_name not in self.groups:
+            return
+
+        msg_to_send = {
+            "tipe_pesan": "PESAN_FILE_GROUP",
+            "data": {
+                "room" : room_name,
+                "username_penerima": username,
+                "filename": filename,
+                "file_content": file_content,
+            },
+        }
+
+        jsonized_msg = json.dumps(msg_to_send)
+        response = bytes(f"{jsonized_msg}\r\n\r\n", encoding="utf-8")
+
+        with self.locker:
+            for client in self.groups[room_name]["clients"]:
+                try:
+                    client.sendall(response)
+                except ConnectionResetError:
+                    continue
 
     def notification_all(self, message, room_name):
         if room_name not in self.groups:
@@ -53,7 +75,7 @@ class ChatGroup:
         }
 
         jsonized_msg = json.dumps(msg)
-        response = bytes(jsonized_msg, encoding="utf-8")
+        response = bytes(f"{jsonized_msg}\r\n\r\n", encoding="utf-8")
 
         with self.locker:
             for client in self.groups[room_name]["clients"]:
@@ -70,7 +92,7 @@ class ChatGroup:
                 }
             )
 
-            return bytes(jsonized_msg, encoding="utf-8")
+            return bytes(f"{jsonized_msg}\r\n\r\n", encoding="utf-8")
 
         self.groups[room_name] = {'clients': [], 'aliases': []}
 
@@ -81,7 +103,7 @@ class ChatGroup:
             }
         })
 
-        return bytes(jsonized_msg, encoding="utf-8")
+        return bytes(f"{jsonized_msg}\r\n\r\n", encoding="utf-8")
 
     def join_group(self, room_name, username, client):
         if room_name not in self.groups:
@@ -94,7 +116,7 @@ class ChatGroup:
                 }
             )
 
-            return bytes(jsonized_msg, encoding="utf-8")
+            return bytes(f"{jsonized_msg}\r\n\r\n", encoding="utf-8")
 
         self.groups[room_name]["clients"].append(client)
         self.groups[room_name]["aliases"].append(username)
@@ -108,11 +130,35 @@ class ChatGroup:
             }
         )
 
-        return bytes(jsonized_msg, encoding="utf-8")
+        return bytes(f"{jsonized_msg}\r\n\r\n", encoding="utf-8")
 
     def process_client(self, client):
+        def recvall(num_bytes, connection) -> str:
+            buffer = StringIO()
+
+            while True:
+                data = connection.recv(num_bytes)
+                if data:
+                    print(data)
+                    d = data.decode()
+                    buffer.write(d)
+
+                    if len(data) < num_bytes:
+                        break
+                        
+                    if d.endswith("\r\n\r\n"):
+                        break
+                else:
+                    break
+            
+            result = buffer.getvalue()
+            stripped_result = result.strip("\r\n\r\n")
+
+            return stripped_result
+
+
         while True:
-            message = client.recv(4096).decode('utf-8')
+            message = recvall(4096, client)
             if message:
                 data = message.split(" ")
                 order = data[0].strip()
@@ -130,6 +176,19 @@ class ChatGroup:
                     self.notification_all(
                         f"{username} has join {room_name}", room_name)
                     client.sendall(result)
+
+                elif order == "FILEGROUP":
+                    room_name = data[1].strip()
+                    username = data[2].strip()
+                    filename = data[3].strip()
+
+                    content_file = StringIO()
+                    for m in data[4]:
+                        content_file.write(m)
+
+                    content_file_string = content_file.getvalue()
+
+                    self.send_file_group(room_name, username, filename, content_file_string)
 
                 elif order == "SENDGROUP":
                     room_name = data[1].strip()
