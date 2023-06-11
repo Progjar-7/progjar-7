@@ -101,7 +101,7 @@ def main(page: ft.Page):
     elif your_username.value not in userbase:
        your_username.error_text = "Your account is not registered"
        page.update()
-    elif your_password.value != userbase[your_username.value]:
+    elif your_password.value != userbase[your_username.value]["password"]:
        your_password.error_text = "Wrong password"
        page.update()
     else:

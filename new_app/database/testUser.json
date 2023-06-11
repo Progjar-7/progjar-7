@@ -1,6 +1,12 @@
 {
     "data": {
-            "user": "12345",
-            "aaa": "123"
+            "user": {
+                "password": "12345",
+                "realm_name": ""
+            },
+            "aaa": {
+                "password": "123",
+                "realm_name": ""
+            }
     }
 }

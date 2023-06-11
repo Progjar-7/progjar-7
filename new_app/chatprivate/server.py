@@ -104,7 +104,7 @@ class ChatPrivate:
 
             return bytes(f"{jsonized_msg}\r\n\r\n", encoding="utf-8")
         
-        if password != self.userbase[username]:
+        if password != self.userbase[username]["password"]:
             jsonized_msg = json.dumps(
                 {
                     "tipe_pesan": "OPEN_KONEKSI_FAIL",
