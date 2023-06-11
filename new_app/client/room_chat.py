@@ -9,7 +9,8 @@ from queue import Queue
 import threading
 
 User = user
-
+userbase = json.load(open("./database/testUser.json"))["data"]
+print(userbase)
 # communication with server
 chat_private = ChatPrivateClient()
 
@@ -96,7 +97,13 @@ def main(page: ft.Page):
     # elif your_username.value != "messi" or your_password.value != "surabaya":
     #   your_username.error_text = "Your account is not registered"
     #   your_password.error_text = "Your account is not registered"
-      # page.update()
+    #   page.update()
+    elif your_username.value not in userbase:
+       your_username.error_text = "Your account is not registered"
+       page.update()
+    elif your_password.value != userbase[your_username.value]:
+       your_password.error_text = "Wrong password"
+       page.update()
     else:
       page.dialog.open = False
       all_messages.controls.clear()
