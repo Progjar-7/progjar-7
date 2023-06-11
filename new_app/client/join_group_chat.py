@@ -1,13 +1,10 @@
 import flet as ft
 
-group_name = ''
-
 def JoinGroupView(page):
   
   def get_group_name(e):
     print("group name: ", group_name_field.value)
-    global group_name
-    group_name = group_name_field.value
+    page.client_storage.set("join_group_name", group_name_field.value) #keyy
     page_layout.open = False
     page_layout.update()
     page.go("/")
@@ -19,6 +16,7 @@ def JoinGroupView(page):
   )
   
   page_layout = ft.AlertDialog(
+    title=ft.Text("Join Group Chat"),
     open=True,
     modal=True,
     content=group_name_field,

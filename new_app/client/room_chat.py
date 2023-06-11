@@ -44,7 +44,7 @@ def PrivateView(page: ft.Page):
   all_messages = ft.Column(scroll="auto", auto_scroll=True)
 
   # SECRET_KEY = "PROGJAR"
-  
+  # Show all messages
   def loop_show_messages():
       while True:
           if not messages.empty():
@@ -84,8 +84,6 @@ def PrivateView(page: ft.Page):
                     page_layout.visible = True
                     page.update()
   
-  
-  # Show all messages
   def get_message(e):
     if not your_username_destination.value:
       your_username_destination.error_text = "Please enter your partner"
@@ -116,30 +114,20 @@ def PrivateView(page: ft.Page):
   # ============= Bagian upload file
   def handle_file_upload(e: ft.FilePickerResultEvent):
     if (e.files) and len(e.files) > 0:
-       filename = e.files[0].name
-
-       with open(e.files[0].path, "rb") as f:
+      filename = e.files[0].name
+      username = page.client_storage.get("username")
+      destination = page.client_storage.get("destination")
+      
+      with open(e.files[0].path, "rb") as f:
           content = base64.b64encode(f.read()).decode()
-          chat_private.send_message(f"FILEPRIVATE {your_username.value} {your_username_destination.value} {filename} {content}")
+          chat_private.send_message(f"FILEPRIVATE {username} {destination} {filename} {content}")
 
   file_picker = ft.FilePicker(on_result=handle_file_upload)
   page.overlay.append(file_picker)
 
   # =============A dialog asking for a user display name
-  your_username = ft.TextField(
-    label="Enter your username",
-    autofocus=True,
-    on_submit=get_message,
-  )
-  
   your_username_destination = ft.TextField(
     label="Enter your partner username",
-    autofocus=True,
-    on_submit=get_message,
-  )
-  
-  your_password = ft.TextField(
-    label="Enter your password",
     autofocus=True,
     on_submit=get_message,
   )
@@ -148,7 +136,7 @@ def PrivateView(page: ft.Page):
     open=True,
     modal=True,
     title=ft.Text("Welcome!"),
-    content=ft.Column([your_username, your_username_destination, your_password],tight=True),
+    content=ft.Column([your_username_destination],tight=True),
     actions=[ft.ElevatedButton(text="Join chat", on_click=get_message)],
     actions_alignment="end",
     )

@@ -6,6 +6,8 @@ from room_chat import PrivateView
 from join_group_chat import JoinGroupView
 from login_view import LoginView
 from register_view import RegisterView
+from group_chat_view import GroupChatView
+from add_group_chat_view import AddGroupView
 
 class Router:
   def __init__(self, page):
@@ -16,8 +18,9 @@ class Router:
       "/login": LoginView(page),
       "/register": RegisterView(page),
       "/private": PrivateView(page),
-      "/add-group": JoinGroupView(page)
-      # "/group": SettingsView(page)
+      "/join-group": JoinGroupView(page),
+      "/add-group": AddGroupView(page),
+      "/group": GroupChatView(page)
       }
     self.body = ft.Container(content=self.routes['/'])
     
