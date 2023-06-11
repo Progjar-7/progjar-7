@@ -1,0 +1,24 @@
+{
+    "data": [
+        {
+            "username": "user1",
+            "password": "12345",
+            "realm_name": "realm1"
+        },
+        {
+            "username": "user2",
+            "password": "12345",
+            "realm_name": "realm1"
+        },
+        {
+            "username": "user3",
+            "password": "12345",
+            "realm_name": "realm2"
+        },
+        {
+            "username": "user4",
+            "password": "12345",
+            "realm_name": "realm2"
+        }
+    ]
+}
