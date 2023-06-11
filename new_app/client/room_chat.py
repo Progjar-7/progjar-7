@@ -4,7 +4,7 @@ from flet import icons
 
 import json
 import user
-from client import ChatPrivateClient
+from client_private import ChatPrivateClient
 from queue import Queue
 import threading
 
@@ -65,17 +65,17 @@ def main(page: ft.Page):
                     page_layout.visible = True
                     page.update()
 
-                 case 'FILE_PRIVATE':
+                 case 'PESAN_FILE_PRIVATE':
                     pengirim = result['data']['username_pengirim']
 
                     if pengirim == current_username:
                       all_messages.controls.append(
-                        User.get_user_interface(username=pengirim, is_me=True, message=result['data']['file_content'])
+                        User.get_file_interface(username=pengirim, is_me=True, filename=result['data']['filename'], content=result['data']['file_content'])
                       )
 
                     else:
                        all_messages.controls.append(
-                        User.get_user_interface(username=pengirim, is_me=False, message=result['data']['file_content'])
+                        User.get_file_interface(username=pengirim, is_me=False, filename=result['data']['filename'], content=result['data']['file_content'])
                       )
 
                     page_layout.visible = True
