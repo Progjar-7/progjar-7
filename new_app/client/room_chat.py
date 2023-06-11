@@ -98,7 +98,7 @@ def PrivateView(page: ft.Page):
     #   your_password.error_text = "Your account is not registered"
       # page.update()
     else:
-      page.dialog.open = False
+      auth_dialog.open = False
       all_messages.controls.clear()
       # connect to server client
       chat_private.start_chat()
@@ -151,7 +151,7 @@ def PrivateView(page: ft.Page):
     on_submit=get_message,
   )
   
-  page.dialog = ft.AlertDialog(
+  auth_dialog = ft.AlertDialog(
     open=True,
     modal=True,
     title=ft.Text("Welcome!"),
@@ -196,6 +196,7 @@ def PrivateView(page: ft.Page):
       ], scroll="auto", auto_scroll=True)
     ),
       chat_cont,
+      auth_dialog
   ])          
     
   # =========Add everything to the page
