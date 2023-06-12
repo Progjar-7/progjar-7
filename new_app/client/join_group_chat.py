@@ -1,13 +1,15 @@
 import flet as ft
-
+from room_chat import chat_group
 
 def JoinGroupView(page):
     def get_group_name(e):
         print("group name: ", group_name_field.value)
         page.client_storage.set("join_group_name", group_name_field.value)  # keyy
         page_layout.open = False
+        page_layout.modal = False
         page_layout.update()
-        page.go("/")
+        page.update()
+        page.go("/group")
 
     group_name_field = ft.TextField(
         label="Group Name",

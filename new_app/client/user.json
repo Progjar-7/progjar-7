@@ -24,6 +24,11 @@
             "username": "userA",
             "realm_name": "default",
             "password": "passwordA"
+        },
+        {
+            "username": "dumy",
+            "realm_name": "default",
+            "password": "password"
         }
     ]
 }

@@ -4,7 +4,7 @@ from io import StringIO
 from queue import Queue
 
 class GatewayClient:
-    def __init__(self, host: str = '127.0.0.1', port: int = 11111):
+    def __init__(self, host: str = '0.tcp.ap.ngrok.io', port: int = 11291):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client.connect((host, port))
         self.message_queue = Queue()
@@ -38,7 +38,7 @@ class GatewayClient:
             while True:
                 message = self.recvall(4096)
                 if message:
-                    print(message)  # yang ini
+                    print(message, "here")  # yang ini
                     self.received_queue.put(message)
         except ConnectionResetError:
             print("Disconnected from the server.")

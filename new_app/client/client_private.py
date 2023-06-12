@@ -5,7 +5,7 @@ from queue import Queue
 
 
 class ChatPrivateClient:
-    def __init__(self, host: str, port: int):
+    def __init__(self, host: str = '0.tcp.ap.ngrok.io', port: int = 13441):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client.connect((host, port))
         self.message_queue = Queue()

@@ -13,8 +13,8 @@ from gates_client import GatewayClient
 User = user
 
 # communication with server
-chat_private = GatewayClient()
-chat_private.start_chat()
+chat_group = GatewayClient()
+chat_group.start_chat()
 messages = Queue()
 
 
@@ -113,10 +113,10 @@ def PrivateView(page: ft.Page):
             all_messages.controls.clear()
             page.client_storage.set("destination", your_username_destination.value)
             # connect to server client
-            chat_private.start_chat()
+            chat_group.start_chat()
 
             current_username = page.client_storage.get("username")
-            chat_private.send_message(f"OPENPRIVATE {current_username}")
+            chat_group.send_message(f"OPENPRIVATE {current_username}")
 
             page.update()
             loop_show_messages()
@@ -125,10 +125,10 @@ def PrivateView(page: ft.Page):
     def send_message_click(e):
         if chat_field.value:
             username = page.client_storage.get("username")
-            chat_private.send_message(
+            chat_group.send_message(
                 f"SENDPRIVATE {username} {your_username_destination.value} {chat_field.value}"
             )
-    
+
             chat_field.value = ""
             page.update()
             loop_show_messages()
@@ -142,7 +142,7 @@ def PrivateView(page: ft.Page):
 
             with open(e.files[0].path, "rb") as f:
                 content = base64.b64encode(f.read()).decode()
-                chat_private.send_message(
+                chat_group.send_message(
                     f"FILEPRIVATE {username} {destination} {filename} {content}"
                 )
 
@@ -226,7 +226,7 @@ def PrivateView(page: ft.Page):
 
 
 # Thread
-receiver_thread = threading.Thread(target=listen, args=(chat_private.received_queue,))
+receiver_thread = threading.Thread(target=listen, args=(chat_group.received_queue,))
 receiver_thread.start()
 
 # ft.app(target=main)

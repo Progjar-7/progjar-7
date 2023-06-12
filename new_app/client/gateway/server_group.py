@@ -180,9 +180,14 @@ class ChatGroup(threading.Thread):
                     room_name = data[1].strip()
                     username = data[2].strip()
 
+                    print("data: ", data)
+                    print("room_name: ", room_name)
+                    print("username: ", username)
+
                     message = ""
                     for w in data[3:]:
                         message = "{} {}".format(message, w)
+                    print("message: ", message)
 
                     if "EXIT" in message:
                         with self.locker:
