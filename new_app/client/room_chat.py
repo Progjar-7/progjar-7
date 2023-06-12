@@ -105,6 +105,7 @@ def PrivateView(page: ft.Page):
                         page.update()
 
     def get_message(e):
+        print ("isSameGroup: ", isSameGroup.value)
         if not your_username_destination.value:
             your_username_destination.error_text = "Please enter your partner"
             page.update()
@@ -149,9 +150,20 @@ def PrivateView(page: ft.Page):
     file_picker = ft.FilePicker(on_result=handle_file_upload)
     page.overlay.append(file_picker)
 
-    # =============A dialog asking for a user display name
+    # =============A dialog 
+    isSameGroup = ft.Checkbox(label="Saya dari kelompok 7", value=False)
     your_username_destination = ft.TextField(
         label="Enter your partner username",
+        autofocus=True,
+        on_submit=get_message,
+    )
+    your_host = ft.TextField(
+        label="Enter Host IP (optional)",
+        autofocus=True,
+        on_submit=get_message,
+    )
+    your_port = ft.TextField(
+        label="Enter Port (optional)",
         autofocus=True,
         on_submit=get_message,
     )
@@ -160,7 +172,7 @@ def PrivateView(page: ft.Page):
         open=True,
         modal=True,
         title=ft.Text("Welcome!"),
-        content=ft.Column([your_username_destination], tight=True),
+        content=ft.Column([your_username_destination, your_host, your_port, isSameGroup], tight=True),
         actions=[ft.ElevatedButton(text="Join chat", on_click=get_message)],
         actions_alignment="end",
     )

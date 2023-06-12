@@ -14,12 +14,22 @@ def JoinGroupView(page):
         autofocus=True,
         on_submit=get_group_name,
     )
+    group_host_field = ft.TextField(
+        label="Host",
+        autofocus=True,
+        on_submit=get_group_name,
+    )
+    group_port_field = ft.TextField(
+        label="port",
+        autofocus=True,
+        on_submit=get_group_name,
+    )
 
     page_layout = ft.AlertDialog(
         title=ft.Text("Join Group Chat"),
         open=True,
         modal=True,
-        content=group_name_field,
+        content=ft.Column([group_name_field, group_host_field, group_port_field], tight=True),
         actions=[ft.ElevatedButton(text=ft.icons.ADD, on_click=get_group_name)],
     )
 
