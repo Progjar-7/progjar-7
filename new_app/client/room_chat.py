@@ -107,7 +107,6 @@ def PrivateView(page: ft.Page):
       destination = page.client_storage.get("destination")
       chat_private.send_message(f"SENDPRIVATE {username} {destination} {chat_field.value}")
 
-      
       chat_field.value = ""
       loop_show_messages()
       page.update()
