@@ -60,6 +60,11 @@ def PrivateView(page: ft.Page):
                         User.get_user_interface(username=pengirim, is_me=False, message=result['data']['pesan'])
                       )
 
+                    else:
+                      all_messages.controls.append(
+                        User.get_user_interface(username=pengirim, is_me=True, message=result['data']['pesan'])
+                      )
+                    
                     page_layout.visible = True
                     page.update()
 
@@ -70,7 +75,11 @@ def PrivateView(page: ft.Page):
                       all_messages.controls.append(
                         User.get_file_interface(username=pengirim, is_me=False, filename=result['data']['filename'], content=result['data']['file_content'])
                       )
-
+                    else:
+                      all_messages.controls.append(
+                          User.get_file_interface(
+                              username=pengirim, is_me=True, filename=result['data']['filename'], content=result['data']['file_content'])
+                      )
                     page_layout.visible = True
                     page.update()
   
@@ -95,7 +104,8 @@ def PrivateView(page: ft.Page):
   def send_message_click(e):
     if chat_field.value:
       username = page.client_storage.get("username")
-      chat_private.send_message(f"SENDPRIVATE {username} {your_username_destination.value} {chat_field.value}")
+      destination = page.client_storage.get("destination")
+      chat_private.send_message(f"SENDPRIVATE {username} {destination} {chat_field.value}")
 
       chat_field.value = ""
       loop_show_messages()
