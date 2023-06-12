@@ -3,9 +3,8 @@ import socket
 from io import StringIO
 from queue import Queue
 
-
 class GatewayClient:
-    def __init__(self, host: str, port: int):
+    def __init__(self, host: str = '127.0.0.1', port: int = 11111):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client.connect((host, port))
         self.message_queue = Queue()

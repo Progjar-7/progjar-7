@@ -8,14 +8,13 @@ import user
 from client_private import ChatPrivateClient
 from queue import Queue
 import threading
-
-import database
+from gates_client import GatewayClient 
 
 User = user
 
 # communication with server
-chat_private = ChatPrivateClient()
-
+chat_private = GatewayClient()
+chat_private.start_chat()
 messages = Queue()
 
 
@@ -129,10 +128,10 @@ def PrivateView(page: ft.Page):
             chat_private.send_message(
                 f"SENDPRIVATE {username} {your_username_destination.value} {chat_field.value}"
             )
-
+    
             chat_field.value = ""
-            loop_show_messages()
             page.update()
+            loop_show_messages()
 
     # ============= Bagian upload file
     def handle_file_upload(e: ft.FilePickerResultEvent):
@@ -151,7 +150,7 @@ def PrivateView(page: ft.Page):
     page.overlay.append(file_picker)
 
     # =============A dialog 
-    isSameGroup = ft.Checkbox(label="Saya dari kelompok 7", value=False)
+    isSameGroup = ft.Checkbox(label="Untuk antar kelompok", value=False)
     your_username_destination = ft.TextField(
         label="Enter your partner username",
         autofocus=True,

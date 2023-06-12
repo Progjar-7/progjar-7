@@ -197,6 +197,17 @@ class ChatPrivate(threading.Thread):
                             msg = "{} {}".format(msg, w)
 
                         self.send_to(username_from, username_to, msg)
+                    
+                    elif order == "SENDPRIVATESINGLE":
+                        username_dest = data[1].strip()
+                        username_from = data[2].strip()
+                        username_to = data[3].strip()
+
+                        msg = ""
+                        for w in data[4:]:
+                            msg = "{} {}".format(msg, w)
+
+                        self.send_single(username_dest, username_from, username_to, msg)
 
                     elif order == "FILEPRIVATE":
                         username_from = data[1].strip()
