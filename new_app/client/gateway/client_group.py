@@ -52,7 +52,7 @@ class ChatGroupClient:
     def send_message(self, message):
         try:
             with self.locker:
-                self.message_queue.put(f"{message}\n\n")
+                self.message_queue.put(f"{message}\r\n\r\n")
         except Exception as e:
             print(f"An error occurred in send_message: {e}")
 

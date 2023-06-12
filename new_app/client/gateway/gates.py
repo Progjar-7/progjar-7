@@ -1,6 +1,6 @@
 import socket
 import threading
-import json
+import time
 from io import StringIO
 from typing import Dict
 from server_private import ChatPrivate as ServerChatPrivate
@@ -14,12 +14,19 @@ class Gates(threading.Thread):
         print(f"Gateway diinisialisasi di {addr}")
         self.addr = addr
         self.private_users: Dict = {}
+        self.group_chats: Dict = {}
         self.local_private_chat_server = ServerChatPrivate()
+        self.local_group_chat_server = ServerChatGroup()
 
-        host, port = self.local_private_chat_server.server.getsockname()
+        private_host, private_port = self.local_private_chat_server.server.getsockname()
 
-        self.local_private_chat_host = host
-        self.local_private_chat_port = port
+        self.local_private_chat_host = private_host
+        self.local_private_chat_port = private_port
+
+        group_host, group_port = self.local_group_chat_server.server.getsockname()
+
+        self.local_group_chat_host = group_host
+        self.local_group_chat_port = group_port
 
         self.received_messsage = Queue()
         self.locker = threading.Lock()
@@ -29,6 +36,7 @@ class Gates(threading.Thread):
         self.server_socket.listen(1)
 
         threading.Thread.__init__(self)
+
 
     def listen(self, queue: Queue, connection: socket.socket):
         print("Listening the queue...")
@@ -70,7 +78,6 @@ class Gates(threading.Thread):
         listener_thread.start()
 
         self.private_users[username] = {
-            "server": None,
             "client": private_client,
             "is_diff": True
         }
@@ -117,6 +124,127 @@ class Gates(threading.Thread):
         
         return "File Terkirim"
 
+    def create_group(self, room_name: str) -> str:
+        if room_name in self.group_chats:
+            return "Ruangan sudah ada"
+        
+        # group_client = ClientChatGroup(host=self.local_group_chat_host, port=self.local_group_chat_port)
+        # group_client.start_chat()
+
+        # group_client.send_message(f"CREATE {room_name}")
+
+        # listener_thread = threading.Thread(target=self.listen, args=(group_client.received_queue, client_connection))
+        # listener_thread.start()
+
+        self.group_chats[room_name] = {
+            "config": {
+                "host": self.local_group_chat_host,
+                "port": self.local_group_chat_port,
+                "is_diff": False,
+            },
+            "members": {
+
+            } 
+        }
+
+        return "Create Group OK"
+
+    def join_group(self, room_name: str, username: str, client_connection: socket.socket) -> str:
+        if room_name in self.group_chats:
+            group_client = ClientChatGroup(host=self.local_group_chat_host, port=self.local_group_chat_port)
+            group_client.start_chat()
+
+            listener_thread = threading.Thread(target=self.listen, args=(group_client.received_queue, client_connection))
+            listener_thread.start()
+
+            self.group_chats[room_name]["members"][username] = {
+                "client": group_client,
+                "is_diff": False
+            }
+
+            group_client.send_message(f"JOIN {room_name} {username}")
+            return "Join Group Sudah Ada, tapi OK"
+
+        group_client_x = ClientChatGroup(host=self.local_group_chat_host, port=self.local_group_chat_port)
+        group_client_x.start_chat()
+
+        listener_thread = threading.Thread(target=self.listen, args=(group_client_x.received_queue, client_connection))
+        listener_thread.start()
+
+        group_client_x.send_message(f"CREATE {room_name}")
+        time.sleep(1)
+        group_client_x.send_message(f"JOIN {room_name} {username}")
+
+        self.group_chats[room_name] = {
+             "config": {
+                "host": self.local_group_chat_host,
+                "port": self.local_group_chat_port,
+                "is_diff": False,
+            },
+            "members": {
+                username: {
+                    "client": group_client_x,
+                    "is_diff": False
+                }
+            } 
+        } 
+        
+        return "Berhasil Join"
+
+    def join_group_external(self, host: str, port: int, room_name: str, username: str, client_connection: socket.socket) -> str:
+        if room_name in self.group_chats:
+            group_client = ClientChatGroup(host=host, port=port)
+            group_client.start_chat()
+
+            listener_thread = threading.Thread(target=self.listen, args=(group_client.received_queue, client_connection))
+            listener_thread.start()
+
+            self.group_chats[room_name]["members"][username] = {
+                "client": group_client,
+                "is_diff": True
+            }
+
+            return "Join Group External Sudah Ada, tapi OK"
+
+        group_client = ClientChatGroup(host=host, port=port)
+        group_client.start_chat()
+
+        listener_thread = threading.Thread(target=self.listen, args=(group_client.received_queue, client_connection))
+        listener_thread.start()
+
+        self.group_chats[room_name] = {
+             "config": {
+                "host": host,
+                "port": port,
+                "is_diff": True,
+            },
+            "members": {
+                username: {
+                    "client": group_client,
+                    "is_diff": True
+                }
+            } 
+        } 
+        
+        return "Berhasil Join"
+    
+    def send_message_group(self, username: str, room_name: str, msg: str) -> str:
+        for uname, data in self.group_chats[room_name]["members"].items():
+            if data["is_diff"]:
+                data["client"].send_message(f"CHAT_GROUP_EKSTERNAL {username} {room_name} {room_name} {msg}\r\n\r\n")
+            elif uname == username:
+                data["client"].send_message(f"SENDGROUP {room_name} {username} {msg}")
+
+        return "Send message oke"
+    
+    def send_file_group(self, username: str, room_name: str, filename: str, file_content: str) -> str:
+        for uname, data in self.group_chats[room_name]["members"].items():
+            if data["is_diff"]:
+                data["client"].send_message(f"FILE_GRUP_EKSTERNAL {username} {room_name} {room_name} {filename} {file_content}\r\n\r\n")
+            elif uname == username:
+                data["client"].send_message(f"FILEGROUP {room_name} {username} {filename} {file_content}")
+
+        return "Send file oke"
 
     def process_request(self, client: socket.socket):
         def recvall(num_bytes, connection: socket.socket) -> str:
@@ -149,6 +277,7 @@ class Gates(threading.Thread):
                     data = message.split(" ")
                     order = data[0].strip()                   
 
+                    # ================== PRIVATE CHAT
                     if order == "OPENPRIVATE":
                         username = data[1].strip()
                         result = self.open_connection(username=username, client_connection=client)
@@ -194,6 +323,36 @@ class Gates(threading.Thread):
                         result = self.send_file(username_from=username_from, username_to=username_to, filename=filename, content_file=content_file_string)
                         print(result)
 
+                    
+                    # ================== GROUP CHAT
+                    elif order == "JOINGROUP":
+                        room_name = data[1].strip()
+                        username = data[2].strip()
+                        result = self.join_group(room_name=room_name, username=username, client_connection=client)
+                        print(result)
+
+                    elif order == "SENDGROUP":
+                        room_name = data[1].strip()
+                        username = data[2].strip()
+
+                        msg = StringIO()
+                        for m in data[3:]:
+                            msg.write(m)
+
+                        result = self.send_message_group(username=username, room_name=room_name, msg=msg.getvalue())
+                        print(result)
+
+                    elif order == "FILEGROUP":
+                        room_name = data[1].strip()
+                        username = data[2].strip()
+                        filename = data[3].strip()
+
+                        content_file = StringIO()
+                        for m in data[4]:
+                            content_file.write(m)
+
+                        result = self.send_file_group(username=username, room_name=room_name, filename=filename, file_content=content_file.getvalue())
+                        print(result)
 
             except ConnectionResetError:
                 print("Disconnected from the server.")
@@ -209,6 +368,7 @@ class Gates(threading.Thread):
     def run(self):
         print('Server is running and listening ...')
         self.local_private_chat_server.start()
+        self.local_group_chat_server.start()
 
         while True:
             client, address = self.server_socket.accept()
