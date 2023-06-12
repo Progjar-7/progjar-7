@@ -1,12 +1,12 @@
 import flet as ft
 import json
 import user
-from client_private import ChatPrivateClient
+from client_group import ChatGroupClient
 from queue import Queue
 import threading
 
 # communication with server
-chat_private = ChatPrivateClient()
+chat_group = ChatGroupClient()
 
 messages = Queue()
 
@@ -27,18 +27,29 @@ def listen(queue: Queue):
 
 
 def AddGroupView(page):
+  
+  def loop_show_messages():
+    while True:
+      if not messages.empty():
+        result = messages.get()
+        print("dari loop show: ", result)
 
   def get_group_name(e):
     if not group_name_field.value:
       group_name_field.error = "Group name cannot be empty"
       page.update()
     else:
-      print("group name: ", group_name_field.value)
+      print("group name chat: ", group_name_field.value)
       page.client_storage.set("new_group_name", group_name_field.value)  # keyy
+      
+      chat_group.send_message(f"CREATE {group_name_field.value}")
       
       page_layout.open = False
       page_layout.update()
-      page.go("/")
+      loop_show_messages()
+      page_layout.update()
+      
+      # page.go("/")
 
   group_name_field = ft.TextField(
       label="Group Name",
@@ -59,5 +70,5 @@ def AddGroupView(page):
 
 # Thread
 receiver_thread = threading.Thread(
-    target=listen, args=(chat_private.received_queue,))
+    target=listen, args=(chat_group.received_queue,))
 receiver_thread.start()
