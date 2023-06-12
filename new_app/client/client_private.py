@@ -4,9 +4,9 @@ from io import StringIO
 from queue import Queue
 
 class ChatPrivateClient:
-    def __init__(self):
+    def __init__(self, host: str, port: int):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.client.connect(('127.0.0.1', 59000))
+        self.client.connect((host, port))
         self.message_queue = Queue()
         self.received_queue = Queue()
         self.locker = threading.Lock()

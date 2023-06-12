@@ -3,7 +3,7 @@ import socket
 from io import StringIO
 from queue import Queue
 
-class ChatGroupClient:
+class GatewayClient:
     def __init__(self, host: str, port: int):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client.connect((host, port))
@@ -33,12 +33,12 @@ class ChatGroupClient:
 
         return stripped_result
 
-    def receive_messages(self):
+    def receive_messages(self):        
         try:
             while True:
                 message = self.recvall(4096)
                 if message:
-                    print(message)
+                    print(message) # yang ini
                     self.received_queue.put(message)
         except ConnectionResetError:
             print("Disconnected from the server.")
@@ -68,8 +68,12 @@ class ChatGroupClient:
                             break
                         else:
                             self.client.sendall(message.encode('utf-8'))
+        except ConnectionResetError:
+            print("Disconnected from the server.")
+        except ConnectionAbortedError as e:
+            print("Exit from group")
         except Exception as e:
-            print(f"An error occurred in process_messages: {e}")
+            print(f"An error occurred in received_message: {e}")
         finally:
             self.client.close()
 
@@ -81,9 +85,10 @@ class ChatGroupClient:
         send_thread.start()
 
 if __name__ == "__main__":
-    client = ChatGroupClient() # alias + roomname gausah diliat dulu
+    client = GatewayClient(host='127.0.0.1', port=11111)
     client.start_chat()
 
     while True:
         msg = input()
         client.send_message(msg)
+
