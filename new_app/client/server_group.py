@@ -3,17 +3,17 @@ import socket
 import json
 from io import StringIO
 
-class ChatGroup:
-    def __init__(self, host, port):
-        self.host = host
-        self.port = port
+class ChatGroup(threading.Thread):
+    def __init__(self, addr: tuple = ('127.0.0.1', 0)):
+        self.addr = addr
         self.clt = []
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.server.bind((self.host, self.port))
+        self.server.bind(self.addr)
         self.server.listen(1)
         self.groups = {}
         self.locker = threading.Lock()
+        threading.Thread.__init__(self)
 
     def broadcast_all(self, message, room_name, username):
         if room_name not in self.groups:
@@ -170,8 +170,8 @@ class ChatGroup:
                 elif order == "JOIN":
                     room_name = data[1].strip()
                     username = data[2].strip()
-
                     result = self.join_group(room_name, username, client)
+                    print("dari sgroup: ", result)
 
                     self.notification_all(
                         f"{username} has join {room_name}", room_name)
@@ -205,18 +205,18 @@ class ChatGroup:
 
                         client.close()
                         self.notification_all(
-                            f'{username} has left the chat room {room_name}!', room_name, username)
+                            f'{username} has left the chat room {room_name}!', room_name)
                         break
 
                     self.broadcast_all(
-                        f"{username}: {message}", room_name, username)
+                        f"{message}", room_name, username)
                 else:
                     print(f"process_client: {message}")
             else:
                 print("unknown command", message)
 
-    def start(self):
-        print('Server is running and listening ...')
+    def run(self):
+        print('Server Group is running and listening ...')
         while True:
             client, address = self.server.accept()
             print(f'Connection established with {str(address)}')

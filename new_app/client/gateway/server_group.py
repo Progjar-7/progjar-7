@@ -170,8 +170,8 @@ class ChatGroup(threading.Thread):
                 elif order == "JOIN":
                     room_name = data[1].strip()
                     username = data[2].strip()
-
                     result = self.join_group(room_name, username, client)
+                    print("dari sgroup: ", result)
 
                     self.notification_all(
                         f"{username} has join {room_name}", room_name)
@@ -205,11 +205,11 @@ class ChatGroup(threading.Thread):
 
                         client.close()
                         self.notification_all(
-                            f'{username} has left the chat room {room_name}!', room_name, username)
+                            f'{username} has left the chat room {room_name}!', room_name)
                         break
 
                     self.broadcast_all(
-                        f"{username}: {message}", room_name, username)
+                        f"{message}", room_name, username)
                 else:
                     print(f"process_client: {message}")
             else:
